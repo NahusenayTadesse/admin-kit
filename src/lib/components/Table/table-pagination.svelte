@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -35,15 +36,16 @@
 	const pageCount = $derived(Math.max(1, Math.ceil(total / Math.max(1, pageSize))));
 	const first = $derived(total === 0 ? 0 : (page - 1) * pageSize + 1);
 	const last = $derived(Math.min(page * pageSize, total));
+
+	const L = useLabels();
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3 border-t px-3 py-2 text-xs">
 	<p class="text-muted-foreground">
 		{#if total === 0}
-			No rows
+			{L.pagerNoRows}
 		{:else}
-			{first.toLocaleString()}–{last.toLocaleString()} of
-			<span class="font-medium text-foreground">{total.toLocaleString()}</span>
+			{L.pagerRange(first.toLocaleString(), last.toLocaleString(), total.toLocaleString())}
 		{/if}
 	</p>
 
@@ -53,7 +55,7 @@
 			value={String(pageSize)}
 			onValueChange={(v) => v && onPageSize(Number(v))}
 		>
-			<Select.Trigger class="h-7 w-[4.5rem] text-xs" aria-label="Rows per page">
+			<Select.Trigger class="h-7 w-[4.5rem] text-xs" aria-label={L.pagerRowsPerPage}>
 				{pageSize}
 			</Select.Trigger>
 			<Select.Content>
@@ -64,14 +66,14 @@
 		</Select.Root>
 
 		<span class="px-1 text-muted-foreground">
-			Page {page.toLocaleString()} of {pageCount.toLocaleString()}
+			{L.pagerPage(page.toLocaleString(), pageCount.toLocaleString())}
 		</span>
 
 		<Button
 			variant="outline"
 			size="icon"
 			class="size-7"
-			aria-label="Previous page"
+			aria-label={L.pagerPrevious}
 			disabled={page <= 1}
 			onclick={() => onPage(page - 1)}
 		>
@@ -81,7 +83,7 @@
 			variant="outline"
 			size="icon"
 			class="size-7"
-			aria-label="Next page"
+			aria-label={L.pagerNext}
 			disabled={page >= pageCount}
 			onclick={() => onPage(page + 1)}
 		>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { onDestroy } from 'svelte';
 	import { mode } from 'mode-watcher';
 	import {
@@ -191,6 +192,8 @@
 	});
 
 	onDestroy(() => instance?.destroy());
+
+	const L = useLabels();
 </script>
 
 <Card class="{chart.wide ? 'lg:col-span-2' : ''} flex flex-col">
@@ -206,7 +209,7 @@
 				variant="ghost"
 				size="sm"
 				class="shrink-0 text-muted-foreground"
-				aria-label={showTable ? 'Show chart' : 'Show values as a table'}
+				aria-label={showTable ? L.reportShowChart : L.reportShowTable}
 				onclick={() => (showTable = !showTable)}
 			>
 				{#if showTable}
@@ -223,7 +226,7 @@
 			<div
 				class="flex h-64 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground"
 			>
-				Nothing recorded for this filter
+				{L.reportEmpty}
 			</div>
 		{:else if showTable}
 			<div class="max-h-72 overflow-auto rounded-md border">
@@ -254,7 +257,7 @@
 			</div>
 		{:else}
 			<div class="h-72">
-				<canvas bind:this={canvas} aria-label="{chart.title} — chart"></canvas>
+				<canvas bind:this={canvas} aria-label={L.reportChartAria(chart.title)}></canvas>
 			</div>
 		{/if}
 	</CardContent>

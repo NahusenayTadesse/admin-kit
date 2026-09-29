@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { onDestroy } from 'svelte';
 	import ChartColumnBig from '@lucide/svelte/icons/chart-column-big';
 	import ChartPie from '@lucide/svelte/icons/chart-pie';
@@ -39,14 +40,15 @@
 
 	type ChartType = 'bar' | 'pie' | 'doughnut' | 'line' | 'polarArea' | 'radar';
 
-	const CHART_TYPES: { value: ChartType; label: string }[] = [
-		{ value: 'bar', label: 'Bar' },
-		{ value: 'pie', label: 'Pie' },
-		{ value: 'doughnut', label: 'Doughnut' },
-		{ value: 'line', label: 'Line' },
-		{ value: 'polarArea', label: 'Polar area' },
-		{ value: 'radar', label: 'Radar' }
-	];
+	const L = useLabels();
+	const CHART_TYPES: { value: ChartType; label: string }[] = $derived([
+		{ value: 'bar', label: L.chartBar },
+		{ value: 'pie', label: L.chartPie },
+		{ value: 'doughnut', label: L.chartDoughnut },
+		{ value: 'line', label: L.chartLine },
+		{ value: 'polarArea', label: L.chartPolarArea },
+		{ value: 'radar', label: L.chartRadar }
+	]);
 
 	const PALETTE = [
 		'#6366f1',
@@ -185,7 +187,7 @@
 			</Select.Root>
 
 			<Select.Root type="single" bind:value={type}>
-				<Select.Trigger class="h-8 w-36 gap-1 text-xs" aria-label="Chart type">
+				<Select.Trigger class="h-8 w-36 gap-1 text-xs" aria-label={L.chartType}>
 					{@const Icon = icon}
 					<Icon class="size-3.5" />
 					{CHART_TYPES.find((t) => t.value === type)?.label}
@@ -199,12 +201,13 @@
 		</div>
 
 		<div class="relative min-h-0 flex-1">
-			<canvas bind:this={canvas} aria-label="{label(currentKey)} breakdown"></canvas>
+			<canvas bind:this={canvas} aria-label={L.chartBreakdown(label(currentKey))}></canvas>
 		</div>
 
 		{#if selected[currentKey]?.length}
 			<p class="text-[11px] text-muted-foreground">
-				Filtered by {current
+				{L.chartFilteredBy}
+				{current
 					.filter((f) => selected[currentKey].includes(f.value))
 					.map((f) => f.label)
 					.join(', ')}

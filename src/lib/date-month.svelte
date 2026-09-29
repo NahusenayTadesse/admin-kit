@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button } from '$lib/components/ui/button';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Calendar } from '$lib/components/ui/calendar';
@@ -9,7 +10,9 @@
 		type CalendarDate,
 		type DateValue
 	} from '@internationalized/date';
-	import { formatEthiopianDate } from './global';
+	import { formatDateIn } from './calendars';
+	import { useCalendar } from './calendarPreference.svelte';
+	import CalendarSwitch from './formComponents/CalendarSwitch.svelte';
 
 	interface Props {
 		start?: CalendarDate | null;
@@ -34,6 +37,12 @@
 		endDate = toCalendarDate(value);
 		if (startDate) onDateChange?.({ start: startDate, end: endDate });
 	};
+
+	const L = useLabels();
+	const preference = useCalendar();
+	$effect(() => preference.restore());
+	const kind = $derived(preference.kind);
+	const show = (d: CalendarDate) => formatDateIn(d, kind, L.dateLocale, 'short');
 </script>
 
 <div class="flex items-center gap-2">
@@ -42,32 +51,42 @@
 			{#snippet child({ props })}
 				<Button variant="outline" class="min-w-35 justify-start text-left font-normal" {...props}>
 					<CalendarIcon class="mr-2 size-4 text-muted-foreground" />
-					{startDate
-						? formatEthiopianDate(new Date(startDate.toDate(getLocalTimeZone()).toISOString()))
-						: 'Start date'}
+					{startDate ? show(startDate) : L.dateStart}
 				</Button>
 			{/snippet}
 		</PopoverTrigger>
-		<PopoverContent class="w-auto p-0" align="start">
-			<Calendar locale="am-ET" type="single" value={startDate} onValueChange={handleStartChange} />
+		<PopoverContent class="flex w-auto flex-col gap-2 p-2" align="start">
+			<CalendarSwitch value={kind} onchange={(k) => preference.set(k)} class="self-start" />
+			<Calendar
+				calendar={kind}
+				locale={L.dateLocale}
+				type="single"
+				value={startDate}
+				onValueChange={handleStartChange}
+			/>
 		</PopoverContent>
 	</Popover>
 
-	<span class="text-sm text-muted-foreground">to</span>
+	<span class="text-sm text-muted-foreground">{L.to}</span>
 
 	<Popover>
 		<PopoverTrigger>
 			{#snippet child({ props })}
 				<Button variant="outline" class="min-w-35 justify-start text-left font-normal" {...props}>
 					<CalendarIcon class="mr-2 size-4 text-muted-foreground" />
-					{endDate
-						? formatEthiopianDate(new Date(endDate.toDate(getLocalTimeZone()).toISOString()))
-						: 'End date'}
+					{endDate ? show(endDate) : L.dateEnd}
 				</Button>
 			{/snippet}
 		</PopoverTrigger>
-		<PopoverContent class="w-auto p-0" align="start">
-			<Calendar type="single" value={endDate} onValueChange={handleEndChange} />
+		<PopoverContent class="flex w-auto flex-col gap-2 p-2" align="start">
+			<CalendarSwitch value={kind} onchange={(k) => preference.set(k)} class="self-start" />
+			<Calendar
+				calendar={kind}
+				locale={L.dateLocale}
+				type="single"
+				value={endDate}
+				onValueChange={handleEndChange}
+			/>
 		</PopoverContent>
 	</Popover>
 </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { SquarePen, Save } from '@lucide/svelte';
 	import { createForm } from '$lib/forms/createForm';
 
@@ -82,9 +83,16 @@
 	const formId = $derived(`${action}-${row.id}`);
 
 	const title = $derived(label ?? String(row[fields[0]?.name ?? 'name'] ?? ''));
+
+	const L = useLabels();
 </script>
 
-<DialogComp title="Edit {title}" variant="ghost" bind:open triggerClass="justify-self-start p-0!">
+<DialogComp
+	title={L.lookupEditTitle(title)}
+	variant="ghost"
+	bind:open
+	triggerClass="justify-self-start p-0!"
+>
 	{#snippet trigger(props)}
 		<Button
 			size="sm"
@@ -93,7 +101,7 @@
 			{...props}
 		>
 			{#if icon}
-				<SquarePen /> Edit
+				<SquarePen /> {L.lookupEdit}
 			{:else}
 				{title}
 			{/if}
@@ -109,9 +117,9 @@
 
 		<Button type="submit" class="mt-4" form={formId}>
 			{#if $delayed}
-				<LoadingBtn name="Saving Changes" />
+				<LoadingBtn name={L.lookupSavingChanges} />
 			{:else}
-				<Save class="h-4 w-4" /> Save Changes
+				<Save class="h-4 w-4" /> {L.lookupSaveChanges}
 			{/if}
 		</Button>
 	</form>

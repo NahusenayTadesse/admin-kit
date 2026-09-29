@@ -1,24 +1,49 @@
 <script lang="ts">
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-
-	const { text }: { text: string | null | undefined } = $props();
+	import { useLabels } from '$lib/labels';
 
 	/**
-	 * Truncate text to a maximum length
+	 * Free text of any length — a note, a reason, an address, a message — in a table cell or a
+	 * list: the first `max` characters and a "…" that plainly asks to be clicked, opening the whole
+	 * text. Text that fits is shown as it is, with nothing to click.
 	 */
-	const truncateText = (text: string | number, maxLength: number = 15): string => {
-		const str = String(text);
-		return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
-	};
+	const {
+		text,
+		max = 15
+	}: {
+		text: string | number | null | undefined;
+		/** Characters shown before the "…". */
+		max?: number;
+	} = $props();
+
+	const L = useLabels();
+
+	const full = $derived(String(text ?? '').trim());
+	// Characters as a person counts them: a Ge'ez letter or an emoji is one, not two code units,
+	// so a cut never lands in the middle of one.
+	const chars = $derived(Array.from(full));
+	const shortened = $derived(chars.length > max);
+	const head = $derived(shortened ? chars.slice(0, max).join('').trimEnd() : full);
 </script>
 
-<div class="w-32">
+{#if !shortened}
+	<span class="whitespace-pre-line">{full}</span>
+{:else}
 	<Popover>
-		<PopoverTrigger>
-			{truncateText(text ?? '')}
+		<PopoverTrigger
+			class="group inline-flex max-w-full cursor-pointer items-center gap-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+			title={L.bigTextShowAll}
+		>
+			<span>{head}</span>
+			<span
+				aria-hidden="true"
+				class="rounded-sm bg-muted px-1 text-xs leading-4 font-bold text-muted-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground"
+				>…</span
+			>
+			<span class="sr-only">{L.bigTextShowAll}</span>
 		</PopoverTrigger>
-		<PopoverContent class="max-w-sm p-3  text-sm wrap-break-word">
-			{text}
+		<PopoverContent class="max-w-sm p-3 text-sm wrap-break-word whitespace-pre-line">
+			{full}
 		</PopoverContent>
 	</Popover>
-</div>
+{/if}

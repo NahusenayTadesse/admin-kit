@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
@@ -34,6 +35,8 @@
 	} = $props();
 
 	let submitting = $state(false);
+
+	const L = useLabels();
 </script>
 
 {#if canDelete}
@@ -43,20 +46,20 @@
 				variant: icon ? 'ghost' : 'destructive',
 				size: icon ? 'icon' : 'default'
 			})}
-			title="Delete {entity}"
-			aria-label="Delete {entity}{name ? ` ${name}` : ''}"
+			title={L.deleteTitle(entity)}
+			aria-label={L.deleteAria(entity, name)}
 		>
 			<Trash class="size-4 {icon ? 'text-destructive' : ''}" />
-			{#if !icon}Delete {entity}{/if}
+			{#if !icon}{L.deleteButton(entity)}{/if}
 		</AlertDialog.Trigger>
 		<AlertDialog.Content>
 			<AlertDialog.Header>
-				<AlertDialog.Title>Delete this {entity.toLowerCase()}?</AlertDialog.Title>
+				<AlertDialog.Title>{L.deleteQuestion(entity)}</AlertDialog.Title>
 				<AlertDialog.Description>
 					{#if name}
-						<strong>{name}</strong> will be removed from every page in the system.
+						<strong>{name}</strong> {L.deleteNamedWarning}
 					{:else}
-						This {entity.toLowerCase()} will be removed from every page in the system.
+						{L.deleteWarning(entity)}
 					{/if}
 					{#if consequence}
 						{consequence}
@@ -78,14 +81,14 @@
 					<input type="hidden" name="id" value={id} />
 				{/if}
 				<AlertDialog.Footer>
-					<AlertDialog.Cancel type="button">Cancel</AlertDialog.Cancel>
+					<AlertDialog.Cancel type="button">{L.cancel}</AlertDialog.Cancel>
 					<AlertDialog.Action class={buttonVariants({ variant: 'destructive' })}>
 						{#snippet child({ props })}
 							<Button type="submit" disabled={submitting} {...props}>
 								{#if submitting}
-									<LoadingBtn name="Deleting {entity}" />
+									<LoadingBtn name={L.deleting(entity)} />
 								{:else}
-									<Trash class="size-4" /> Delete {entity}
+									<Trash class="size-4" /> {L.deleteButton(entity)}
 								{/if}
 							</Button>
 						{/snippet}

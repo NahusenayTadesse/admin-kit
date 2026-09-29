@@ -1,4 +1,5 @@
 <script lang="ts" generics="TData, TValue">
+	import { useLabels } from '$lib/labels';
 	import {
 		type ColumnDef,
 		type ColumnFiltersState,
@@ -371,6 +372,8 @@
 
 	const canChart = $derived(charts && facetKeys.length > 0);
 	let chartsOpen = $state(false);
+
+	const L = useLabels();
 </script>
 
 <div class="mt-4 w-full {className}" style="height: {height}" data-testid="table-frame">
@@ -385,7 +388,7 @@
 				<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
 					<Input
 						type="search"
-						placeholder={isServer ? 'Search all rows…' : 'Search Table...'}
+						placeholder={isServer ? L.tableSearchServer : L.tableSearch}
 						class="w-64 lg:w-xl"
 						bind:value={
 							() => (isServer ? serverSearch : globalFilter),
@@ -398,7 +401,8 @@
 						<DropdownMenu.Trigger>
 							{#snippet child({ props })}
 								<Button {...props} variant="outline" class="ml-auto">
-									Columns <ChevronDownIcon class="size-5" />
+									{L.tableColumns}
+									<ChevronDownIcon class="size-5" />
 								</Button>
 							{/snippet}
 						</DropdownMenu.Trigger>
@@ -408,7 +412,9 @@
 									class="capitalize"
 									bind:checked={() => column.getIsVisible(), (v) => column.toggleVisibility(!!v)}
 								>
-									{column.id.replace(/([a-z])([A-Z])/g, '$1 $2')}
+									{typeof column.columnDef.header === 'string' && column.columnDef.header
+										? column.columnDef.header
+										: column.id.replace(/([a-z])([A-Z])/g, '$1 $2')}
 								</DropdownMenu.CheckboxItem>
 							{/each}
 						</DropdownMenu.Content>
@@ -417,7 +423,7 @@
 					{#if activeFacetCount}
 						<Button variant="ghost" size="sm" class="gap-1" onclick={clearAllFacets}>
 							<RotateCcw class="size-4" />
-							Clear {activeFacetCount}
+							{L.tableClear(activeFacetCount)}
 						</Button>
 					{/if}
 
@@ -438,13 +444,13 @@
 							onclick={() => (chartsOpen = !chartsOpen)}
 						>
 							<ChartColumnBig />
-							Charts
+							{L.tableCharts}
 						</Button>
 					{/if}
 
 					<Button variant="outline">
 						<ListOrdered />
-						{pagerTotal.toLocaleString()} Results
+						{L.tableResults(pagerTotal.toLocaleString())}
 					</Button>
 				</div>
 			</ScrollArea>
@@ -512,7 +518,8 @@
 							<Table.Row>
 								<Table.Cell colspan={columns.length} class="text-center font-2xl">
 									<div class="flex flex-row items-center justify-center gap-2">
-										<Frown class="animate-bounce" /> Nothing found here.
+										<Frown class="animate-bounce" />
+										{L.tableEmpty}
 									</div>
 								</Table.Cell>
 							</Table.Row>

@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends Record<string, unknown>">
+	import { useLabels } from '$lib/labels';
 	import { untrack, type Snippet } from 'svelte';
 	import type { SuperForm, SuperValidated } from 'sveltekit-superforms';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
@@ -41,8 +42,8 @@
 		schema,
 		fields,
 		description,
-		submitLabel = 'Save changes',
-		triggerLabel = 'Edit',
+		submitLabel = undefined,
+		triggerLabel = undefined,
 		disabled = false,
 		open = $bindable(false),
 		seed,
@@ -106,6 +107,8 @@
 
 	/* One id per action: several of these share a page, and the submit button finds its form by id. */
 	const formId = $derived(`form-${action.replace(/\W/g, '')}`);
+
+	const L = useLabels();
 </script>
 
 {#if !disabled}
@@ -114,7 +117,7 @@
 			{#if !hideTrigger}
 				<Button size="sm" variant="ghost" class="ml-auto gap-1" {...props}>
 					<SquarePen class="size-4" />
-					{triggerLabel}
+					{triggerLabel ?? L.lookupEdit}
 				</Button>
 			{/if}
 		{/snippet}
@@ -133,10 +136,10 @@
 
 			<Button type="submit" form={formId} class="mt-2">
 				{#if $delayed}
-					<LoadingBtn name="Saving" />
+					<LoadingBtn name={L.saving} />
 				{:else}
 					<Save class="size-4" />
-					{submitLabel}
+					{submitLabel ?? L.saveChanges}
 				{/if}
 			</Button>
 		</form>

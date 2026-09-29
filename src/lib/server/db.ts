@@ -39,6 +39,11 @@ export type KitConfig = {
 	auditLog?: MySqlTable;
 	/** Where a signed-out visitor is sent — the file route uses it. Defaults to `/login`. */
 	loginPath?: string;
+	/**
+	 * The words of the kit's server messages in the app's language — see `server/labels`.
+	 * Called per message, so it can read the current request's locale. Optional: English.
+	 */
+	labels?: () => Partial<import('./labels').ServerLabels>;
 };
 
 let config: KitConfig | undefined;
@@ -55,6 +60,11 @@ export function kitConfig(): KitConfig {
 		);
 	}
 	return config;
+}
+
+/** The app's server labels, if it gave any. Readable before `configureKit` has run. */
+export function kitLabelsSource() {
+	return config?.labels;
 }
 
 /** The login page, readable before `configureKit` has run (it then falls back to `/login`). */

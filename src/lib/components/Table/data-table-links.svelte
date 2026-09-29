@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import type { Component } from 'svelte';
 	import type { IconProps } from '@lucide/svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -66,6 +67,8 @@
 				? null
 				: `${link}/${id}`
 	);
+
+	const L = useLabels();
 </script>
 
 {#if !href}
@@ -104,7 +107,7 @@
 				{/snippet}
 			</Tooltip.Trigger>
 			<Tooltip.Content class="left-0 justify-self-start">
-				<p class="text-[13px]!">Goto {name}</p>
+				<p class="text-[13px]!">{L.goTo(name ?? '')}</p>
 			</Tooltip.Content>
 		</Tooltip.Root>
 	</Tooltip.Provider>

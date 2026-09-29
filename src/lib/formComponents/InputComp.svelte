@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import type { Writable } from 'svelte/store';
 	// The shared picker option, not a local copy of it.
 	import type { Item } from '$lib/global';
@@ -35,6 +36,7 @@
 	import SelectComp from './SelectComp.svelte';
 	import ComboboxComp from './ComboboxComp.svelte';
 	import CheckboxComp from './CheckboxComp.svelte';
+	import type { CalendarKind } from '$lib/calendars';
 
 	/**
 	 * One form field, dispatching on `type`.
@@ -100,7 +102,8 @@
 		disabled = false,
 		id = undefined,
 		description = undefined,
-		allowEmpty = undefined
+		allowEmpty = undefined,
+		calendar = undefined
 	}: {
 		label: string;
 		/** The superforms `$form` store. Indexed by `name`. */
@@ -132,6 +135,12 @@
 		 * today pre-filled is a value nobody entered, and saved unread it is a wrong one.
 		 */
 		allowEmpty?: boolean;
+		/**
+		 * Dates only: always this calendar, with no switch. Left out, the date is shown on whichever
+		 * calendar the person chose (Ethiopian by default) and can be switched. Either way the form
+		 * posts a Gregorian `YYYY-MM-DD`.
+		 */
+		calendar?: CalendarKind;
 	} = $props();
 
 	let showPassword = $state(false);
@@ -165,6 +174,8 @@
 		[description ? describedById : null, invalid ? errorId : null].filter(Boolean).join(' ') ||
 			undefined
 	);
+
+	const L = useLabels();
 </script>
 
 <div class="flex w-full max-w-full flex-col justify-start gap-2 p-1">
@@ -193,6 +204,7 @@
 			{year}
 			{futureDays}
 			allowEmpty={allowEmpty ?? !required}
+			{calendar}
 		/>
 		<input type="hidden" {name} bind:value={$form[name]} />
 	{:else if type === 'dateMultiple'}
@@ -229,7 +241,7 @@
 					size="icon"
 					variant="ghost"
 					class="size-8 hover:bg-muted"
-					aria-label={showPassword ? 'Hide password' : 'Show password'}
+					aria-label={showPassword ? L.hidePassword : L.showPassword}
 					aria-pressed={showPassword}
 					onclick={() => (showPassword = !showPassword)}
 				>

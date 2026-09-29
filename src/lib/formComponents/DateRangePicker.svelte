@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
 	import { Calendar } from '$lib/components/ui/calendar';
 	import * as Popover from '$lib/components/ui/popover/index.js';
@@ -6,6 +7,9 @@
 	import { cn } from '$lib/utils.js';
 	import { CalendarDate, getLocalTimeZone, today, parseDate } from '@internationalized/date';
 	import { CalendarIcon } from '@lucide/svelte';
+	import { formatDateIn, isoDate } from '$lib/calendars';
+	import { useCalendar } from '$lib/calendarPreference.svelte';
+	import CalendarSwitch from '$lib/formComponents/CalendarSwitch.svelte';
 
 	let {
 		data = $bindable(''), // Expects "YYYY-MM-DD,YYYY-MM-DD"
@@ -28,26 +32,23 @@
 		data ? data.split(',').map((d) => parseDate(d.trim())) : []
 	);
 
-	// Sync internal state back to the 'data' string prop
+	// Sync internal state back to the 'data' string prop: Gregorian, always.
 	$effect(() => {
-		data = selectedDates.map((d) => d.toString()).join(',');
+		data = selectedDates.map((d) => isoDate(d)).join(',');
 	});
 
-	const formatEthiopianDate = (date: CalendarDate): string => {
-		const formatter = new Intl.DateTimeFormat('am-ET', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			calendar: 'ethiopic'
-		});
-		return formatter.format(date.toDate(tz));
-	};
-
 	// Derived label for the trigger button
+	const L = useLabels();
+	const preference = useCalendar();
+	$effect(() => preference.restore());
+	const kind = $derived(preference.kind);
+	/** A picked date on the calendar in view. The dates themselves stay Gregorian. */
+	const formatEthiopianDate = (date: CalendarDate): string =>
+		formatDateIn(date, kind, L.dateLocale, 'short');
 	const displayLabel = $derived.by(() => {
-		if (selectedDates.length === 0) return 'Select dates';
+		if (selectedDates.length === 0) return L.selectDates;
 		if (selectedDates.length === 1) return formatEthiopianDate(selectedDates[0]);
-		return `${selectedDates.length} dates selected`;
+		return L.datesSelected(selectedDates.length);
 	});
 </script>
 
@@ -66,12 +67,13 @@
 	</Popover.Trigger>
 
 	<Popover.Content class="flex w-auto flex-col gap-2 p-4">
+		<CalendarSwitch value={kind} onchange={(k) => preference.set(k)} class="self-start" />
 		<ScrollArea class="h-80">
 			<div class="flex flex-col text-sm text-muted-foreground">
 				{#if selectedDates.length > 0}
 					<ScrollArea class="m-2 max-h-24">
 						<ul class="flex max-h-24 max-w-72 flex-row flex-wrap gap-2 rounded-lg border">
-							{#each selectedDates as date}
+							{#each selectedDates as date (date.toString())}
 								<li
 									class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs text-primary"
 								>
@@ -80,17 +82,18 @@
 							{/each}
 						</ul>
 					</ScrollArea>
-				{:else}No dates selected{/if}
+				{:else}{L.noDatesSelected}{/if}
 			</div>
 			<div class="mt-4 grid grid-cols-2 gap-2">
 				<Button variant="secondary" size="sm" onclick={() => (selectedDates = [today(tz)])}>
-					Today Only
+					{L.todayOnly}
 				</Button>
-				<Button variant="ghost" size="sm" onclick={() => (selectedDates = [])}>Clear All</Button>
+				<Button variant="ghost" size="sm" onclick={() => (selectedDates = [])}>{L.clearAll}</Button>
 			</div>
 			<ScrollArea>
 				<Calendar
-					locale="am-ET"
+					calendar={kind}
+					locale={L.dateLocale}
 					type="multiple"
 					captionLayout={year ? 'dropdown-years' : 'label'}
 					minValue={minDate}

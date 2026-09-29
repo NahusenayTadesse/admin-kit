@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { toast } from 'svelte-sonner';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -37,6 +38,7 @@
 	let includes = $derived(includeUppercase || includeLowercase || includeNumbers || includeSymbols);
 
 	// Password strength calculation
+	const L = useLabels();
 	const passwordStrength = $derived.by(() => {
 		if (!password) return { label: 'None', color: 'bg-muted', width: 'w-0' };
 		let score = 0;
@@ -48,10 +50,10 @@
 		if (/[0-9]/.test(password)) score++;
 		if (/[^A-Za-z0-9]/.test(password)) score++;
 
-		if (score <= 2) return { label: 'Weak', color: 'bg-red-500', width: 'w-1/4' };
-		if (score <= 4) return { label: 'Fair', color: 'bg-orange-500', width: 'w-2/4' };
-		if (score <= 5) return { label: 'Good', color: 'bg-yellow-500', width: 'w-3/4' };
-		return { label: 'Strong', color: 'bg-green-500', width: 'w-full' };
+		if (score <= 2) return { label: L.pwWeak, color: 'bg-red-500', width: 'w-1/4' };
+		if (score <= 4) return { label: L.pwFair, color: 'bg-orange-500', width: 'w-2/4' };
+		if (score <= 5) return { label: L.pwGood, color: 'bg-yellow-500', width: 'w-3/4' };
+		return { label: L.pwStrong, color: 'bg-green-500', width: 'w-full' };
 	});
 
 	/** Generate a random password */
@@ -65,7 +67,7 @@
 		if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
 		if (!charset) {
-			toast.error('Please select at least one character type');
+			toast.error(L.pwPickOne);
 			isGenerating = false;
 			return;
 		}
@@ -84,19 +86,19 @@
 	/** Copy password to clipboard */
 	async function copyPassword() {
 		if (!password) {
-			toast.error('Generate a password first');
+			toast.error(L.pwGenerateFirst);
 			return;
 		}
 
 		try {
 			await navigator.clipboard.writeText(String(password));
 			copied = true;
-			toast.success('Password copied to clipboard');
+			toast.success(L.pwCopied);
 			setTimeout(() => {
 				copied = false;
 			}, 2000);
 		} catch {
-			toast.error('Failed to copy password');
+			toast.error(L.pwCopyFailed);
 		}
 	}
 
@@ -105,7 +107,7 @@
 	});
 </script>
 
-<DialogComp title="Generate Password" IconComp={ShieldCheckIcon} variant="default">
+<DialogComp title={L.pwTitle} IconComp={ShieldCheckIcon} variant="default">
 	<Card class="shadow-lg-lg w-full max-w-md">
 		<CardHeader class="pb-4">
 			<div class="flex items-center gap-3">
@@ -113,8 +115,8 @@
 					<ShieldCheckIcon class="size-5 text-primary" />
 				</div>
 				<div>
-					<CardTitle class="text-xl">Password Generator</CardTitle>
-					<CardDescription>Create a secure, random password</CardDescription>
+					<CardTitle class="text-xl">{L.pwHeading}</CardTitle>
+					<CardDescription>{L.pwDescription}</CardDescription>
 				</div>
 			</div>
 		</CardHeader>
@@ -122,7 +124,7 @@
 		<CardContent class="space-y-6">
 			<!-- Password Display -->
 			<div class="flex flex-col gap-2">
-				<Label class="text-sm font-medium">Generated Password</Label>
+				<Label class="text-sm font-medium">{L.pwGenerated}</Label>
 				<div class="relative">
 					<Input
 						type={showPassword ? 'text' : 'password'}
@@ -160,7 +162,7 @@
 				<!-- Strength Indicator -->
 				<div class="space-y-1.5">
 					<div class="flex items-center justify-between text-xs">
-						<span class="text-muted-foreground">Password Strength</span>
+						<span class="text-muted-foreground">{L.pwStrength}</span>
 						<span class="font-medium">{passwordStrength.label}</span>
 					</div>
 					<div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -178,7 +180,7 @@
 			<!-- Password Length -->
 			<div class="space-y-3">
 				<div class="flex items-center justify-between">
-					<Label class="text-sm font-medium">Password Length</Label>
+					<Label class="text-sm font-medium">{L.pwLength}</Label>
 					<span class="rounded-md bg-muted px-2 py-0.5 text-sm font-semibold tabular-nums">
 						{passwordLength}
 					</span>
@@ -192,26 +194,26 @@
 
 			<!-- Character Options -->
 			<div class="space-y-3">
-				<Label class="text-sm font-medium">Character Types</Label>
+				<Label class="text-sm font-medium">{L.pwCharacterTypes}</Label>
 				{#if !includes}
-					<p class="text-center text-destructive">You must select at least one character type</p>
+					<p class="text-center text-destructive">{L.pwPickOne}</p>
 				{/if}
 
 				<div class="grid grid-cols-2 gap-3">
 					<div class="flex items-center justify-between rounded-lg border p-3">
-						<Label class="cursor-pointer text-sm">Uppercase (A-Z)</Label>
+						<Label class="cursor-pointer text-sm">{L.pwUppercase}</Label>
 						<Switch bind:checked={includeUppercase} />
 					</div>
 					<div class="flex items-center justify-between rounded-lg border p-3">
-						<Label class="cursor-pointer text-sm">Lowercase (a-z)</Label>
+						<Label class="cursor-pointer text-sm">{L.pwLowercase}</Label>
 						<Switch bind:checked={includeLowercase} />
 					</div>
 					<div class="flex items-center justify-between rounded-lg border p-3">
-						<Label class="cursor-pointer text-sm">Numbers (0-9)</Label>
+						<Label class="cursor-pointer text-sm">{L.pwNumbers}</Label>
 						<Switch bind:checked={includeNumbers} />
 					</div>
 					<div class="flex items-center justify-between rounded-lg border p-3">
-						<Label class="cursor-pointer text-sm">Symbols (!@#)</Label>
+						<Label class="cursor-pointer text-sm">{L.pwSymbols}</Label>
 						<Switch bind:checked={includeSymbols} />
 					</div>
 				</div>
@@ -222,14 +224,10 @@
 				class="h-11 w-full gap-2 text-base font-semibold"
 				onclick={generatePassword}
 				disabled={isGenerating || !includes}
-				title={!includes
-					? 'You must select at least one character types'
-					: isGenerating
-						? 'Generating Password'
-						: 'Generate Password'}
+				title={!includes ? L.pwPickOne : isGenerating ? L.pwGenerating : L.pwTitle}
 			>
 				<RefreshCwIcon class={['size-4', isGenerating && 'animate-spin']} />
-				Generate New Password
+				{L.pwGenerateNew}
 			</Button>
 		</CardContent>
 	</Card>

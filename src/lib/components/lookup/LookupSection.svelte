@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Plus } from '@lucide/svelte';
 	import { createForm } from '$lib/forms/createForm';
 
@@ -63,6 +64,7 @@
 		}
 	});
 
+	const L = useLabels();
 	const columns = $derived(
 		lookupColumns(config, {
 			editForm,
@@ -70,14 +72,20 @@
 			options,
 			actions,
 			editSchema: schemas?.edit,
-			readonly
+			readonly,
+			labels: L
 		})
 	);
 </script>
 
 <div class="flex flex-col gap-4">
 	{#if !readonly}
-		<DialogComp bind:open title="+ Add {config.entity}" variant="outline" triggerClass="self-start">
+		<DialogComp
+			bind:open
+			title={L.lookupAddTitle(config.entity)}
+			variant="outline"
+			triggerClass="self-start"
+		>
 			<form
 				action={actions.add}
 				use:enhance
@@ -90,9 +98,9 @@
 
 				<Button type="submit" form={actions.add}>
 					{#if $delayed}
-						<LoadingBtn name="Adding {config.entity}" />
+						<LoadingBtn name={L.lookupAdding(config.entity)} />
 					{:else}
-						<Plus /> Add {config.entity}
+						<Plus /> {L.lookupAdd(config.entity)}
 					{/if}
 				</Button>
 			</form>

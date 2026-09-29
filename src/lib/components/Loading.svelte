@@ -1,7 +1,10 @@
 <script>
+	import { useLabels } from '$lib/labels';
 	import { Loader } from '@lucide/svelte';
 
 	let { name } = $props();
+
+	const L = useLabels();
 </script>
 
 <div
@@ -9,6 +12,6 @@
 >
 	<div class="flex flex-row items-center gap-2">
 		<Loader class="h-8 w-8 animate-spin" />
-		<h1 class="animate-pulse capitalize">Loading {name}...</h1>
+		<h1 class="animate-pulse capitalize">{L.loadingNamed(name)}</h1>
 	</div>
 </div>

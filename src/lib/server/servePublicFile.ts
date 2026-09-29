@@ -1,3 +1,4 @@
+import { serverLabels } from './labels';
 import { error } from '@sveltejs/kit';
 import { streamStoredFile } from './serveFile';
 
@@ -29,7 +30,7 @@ export function servePublicFile({
 		params: { name: string };
 		request: Request;
 	}): Promise<Response> => {
-		if (!(await isPublic(params.name))) error(404, 'Not found');
+		if (!(await isPublic(params.name))) error(404, serverLabels().notFound);
 
 		return streamStoredFile(params.name, request, 'public');
 	};

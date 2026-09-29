@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { formatETB } from '$lib/global';
 	import type { Stat } from './types';
@@ -17,6 +18,7 @@
 	const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 	const DECIMAL = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 
+	const L = useLabels();
 	const display = $derived.by(() => {
 		switch (stat.format) {
 			case 'money':
@@ -24,11 +26,11 @@
 			case 'percent':
 				return `${DECIMAL.format(stat.value)}%`;
 			case 'years':
-				return `${DECIMAL.format(stat.value)} yr`;
+				return L.statYears(DECIMAL.format(stat.value));
 			case 'hours':
-				return `${DECIMAL.format(stat.value)} h`;
+				return L.statHours(DECIMAL.format(stat.value));
 			case 'days':
-				return `${NUMBER.format(stat.value)} d`;
+				return L.statDays(NUMBER.format(stat.value));
 			default:
 				return NUMBER.format(stat.value);
 		}

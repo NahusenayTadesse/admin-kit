@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import type { Component } from 'svelte';
 	import type { SuperValidated } from 'sveltekit-superforms';
 	import type { IconProps } from '@lucide/svelte';
@@ -41,6 +42,8 @@
 
 	let asking = $state(false);
 	let formEl = $state<HTMLFormElement>();
+
+	const L = useLabels();
 </script>
 
 <form method="post" {action} use:enhance bind:this={formEl} class="contents">
@@ -72,7 +75,7 @@
 				<AlertDialog.Description>{confirm.description}</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel>Keep it</AlertDialog.Cancel>
+				<AlertDialog.Cancel>{L.keepIt}</AlertDialog.Cancel>
 				<AlertDialog.Action
 					onclick={() => {
 						asking = false;

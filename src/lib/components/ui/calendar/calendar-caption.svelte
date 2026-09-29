@@ -29,13 +29,13 @@
 
 	function formatYear(date: DateValue) {
 		const dateObj = date.toDate(getLocalTimeZone());
-		if (typeof yearFormat === 'function') return yearFormat(dateObj.getFullYear());
+		if (typeof yearFormat === 'function') return yearFormat(date.year);
 		return new DateFormatter(locale, { year: yearFormat }).format(dateObj);
 	}
 
 	function formatMonth(date: DateValue) {
 		const dateObj = date.toDate(getLocalTimeZone());
-		if (typeof monthFormat === 'function') return monthFormat(dateObj.getMonth() + 1);
+		if (typeof monthFormat === 'function') return monthFormat(date.month);
 		return new DateFormatter(locale, { month: monthFormat }).format(dateObj);
 	}
 </script>

@@ -1,3 +1,4 @@
+import { labelText, serverLabels, type Label } from './labels';
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { and, asc, eq } from 'drizzle-orm';
@@ -62,7 +63,8 @@ export interface ChildCrudOptions {
 	/** The column on `table` holding the owner's id — `staffId`, `patientId`. */
 	ownerColumn: string;
 	/** Singular, human readable, for toasts and the delete prompt. */
-	label: string;
+	/** What the flash messages call a row: a string, or a function for a translated name. */
+	label: Label;
 	addSchema: AnySchema;
 	editSchema: AnySchema;
 	/** Fields holding an uploaded File; saved to disk, stored as a filename. */
@@ -210,7 +212,7 @@ export function childCrud({
 				if (!form.valid) {
 					return message(
 						form,
-						{ type: 'error', text: 'Please check the form for errors' },
+						{ type: 'error', text: serverLabels().crudCheckForm },
 						{ status: 400 }
 					);
 				}
@@ -233,20 +235,27 @@ export function childCrud({
 					} else {
 						await db.insert(table).values(written as never);
 					}
-					return message(form, { type: 'success', text: `${label} added` });
+					return message(form, {
+						type: 'success',
+						text: serverLabels().crudAdded(labelText(label))
+					});
 				} catch (err) {
 					if (err instanceof WriteRefused) return refused(form, err);
 					if (isDuplicateKey(err)) {
-						setError(form, 'name' as never, `That ${label.toLowerCase()} already exists.`);
+						setError(form, 'name' as never, serverLabels().crudExists(labelText(label)));
 						return message(
 							form,
-							{ type: 'error', text: `That ${label.toLowerCase()} already exists.` },
+							{ type: 'error', text: serverLabels().crudExists(labelText(label)) },
 							{ status: 400 }
 						);
 					}
 
-					console.error(`Failed to add ${label}:`, err);
-					return message(form, { type: 'error', text: `Could not add ${label}` }, { status: 500 });
+					console.error(`Failed to add ${labelText(label)}:`, err);
+					return message(
+						form,
+						{ type: 'error', text: serverLabels().crudCouldNotAdd(labelText(label)) },
+						{ status: 500 }
+					);
 				}
 			},
 
@@ -257,7 +266,7 @@ export function childCrud({
 				if (!form.valid) {
 					return message(
 						form,
-						{ type: 'error', text: 'Please check the form for errors' },
+						{ type: 'error', text: serverLabels().crudCheckForm },
 						{ status: 400 }
 					);
 				}
@@ -297,18 +306,18 @@ export function childCrud({
 					});
 
 					return found
-						? message(form, { type: 'success', text: `${label} updated` })
+						? message(form, { type: 'success', text: serverLabels().crudUpdated(labelText(label)) })
 						: message(
 								form,
-								{ type: 'error', text: `That ${label.toLowerCase()} no longer exists.` },
+								{ type: 'error', text: serverLabels().crudGone(labelText(label)) },
 								{ status: 404 }
 							);
 				} catch (err) {
 					if (err instanceof WriteRefused) return refused(form, err);
-					console.error(`Failed to update ${label}:`, err);
+					console.error(`Failed to update ${labelText(label)}:`, err);
 					return message(
 						form,
-						{ type: 'error', text: `Could not update ${label}` },
+						{ type: 'error', text: serverLabels().crudCouldNotUpdate(labelText(label)) },
 						{ status: 500 }
 					);
 				}
@@ -327,7 +336,11 @@ export function childCrud({
 				const form = await superValidate(event.request, zod4(idSchema));
 
 				if (!form.valid) {
-					return message(form, { type: 'error', text: 'Invalid request' }, { status: 400 });
+					return message(
+						form,
+						{ type: 'error', text: serverLabels().crudInvalidRequest },
+						{ status: 400 }
+					);
 				}
 
 				try {
@@ -352,17 +365,17 @@ export function childCrud({
 					});
 
 					return removed
-						? message(form, { type: 'success', text: `${label} deleted` })
+						? message(form, { type: 'success', text: serverLabels().crudDeleted(labelText(label)) })
 						: message(
 								form,
-								{ type: 'error', text: `That ${label.toLowerCase()} no longer exists.` },
+								{ type: 'error', text: serverLabels().crudGone(labelText(label)) },
 								{ status: 404 }
 							);
 				} catch (err) {
-					console.error(`Failed to delete ${label}:`, err);
+					console.error(`Failed to delete ${labelText(label)}:`, err);
 					return message(
 						form,
-						{ type: 'error', text: `Could not delete ${label}` },
+						{ type: 'error', text: serverLabels().crudCouldNotDelete(labelText(label)) },
 						{ status: 500 }
 					);
 				}

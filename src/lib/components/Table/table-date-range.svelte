@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import CalendarRange from '@lucide/svelte/icons/calendar-range';
 	import X from '@lucide/svelte/icons/x';
 	import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date';
@@ -8,6 +9,9 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { setServerParams } from './table-state.svelte';
+	import { formatDateIn, isoDate } from '$lib/calendars';
+	import { useCalendar } from '$lib/calendarPreference.svelte';
+	import CalendarSwitch from '$lib/formComponents/CalendarSwitch.svelte';
 
 	/**
 	 * A date window for a server-mode table, written to `dateStart`/`dateEnd`.
@@ -54,23 +58,21 @@
 	// Follows the URL — a back button, a cleared filter — and is overwritten while picking.
 	let range = $derived<DateRange>(fromUrl());
 
-	/** Dates shown the way every other date in the app is: on the Ethiopian calendar. */
-	const ethiopian = new Intl.DateTimeFormat('am-ET', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-		calendar: 'ethiopic'
-	});
+	const L = useLabels();
+	const preference = useCalendar();
+	$effect(() => preference.restore());
+	const kind = $derived(preference.kind);
 
+	/** The window on the calendar in view; the URL holds it in Gregorian. */
 	const summary = $derived(
 		start && end
-			? `${ethiopian.format(parseDate(start).toDate(tz))} – ${ethiopian.format(parseDate(end).toDate(tz))}`
+			? `${formatDateIn(start, kind, L.dateLocale, 'short')} – ${formatDateIn(end, kind, L.dateLocale, 'short')}`
 			: null
 	);
 
 	function apply(from: DateValue, to: DateValue) {
 		open = false;
-		setServerParams({ dateStart: from.toString(), dateEnd: to.toString() });
+		setServerParams({ dateStart: isoDate(from), dateEnd: isoDate(to) });
 	}
 
 	function clear() {
@@ -78,13 +80,13 @@
 		setServerParams({ dateStart: null, dateEnd: null });
 	}
 
-	const presets = [
-		{ label: 'Today', days: 0 },
-		{ label: 'Last 7 days', days: 6 },
-		{ label: 'Last 30 days', days: 29 },
-		{ label: 'Last 90 days', days: 89 },
-		{ label: 'Last 12 months', days: 364 }
-	];
+	const presets = $derived([
+		{ label: L.dateToday, days: 0 },
+		{ label: L.dateLast7, days: 6 },
+		{ label: L.dateLast30, days: 29 },
+		{ label: L.dateLast90, days: 89 },
+		{ label: L.dateLast12Months, days: 364 }
+	]);
 </script>
 
 <div class="flex items-center">
@@ -111,25 +113,32 @@
 				{/each}
 			</div>
 
-			<RangeCalendar bind:value={range} class="rounded-md border" captionLayout="dropdown" />
+			<CalendarSwitch value={kind} onchange={(k) => preference.set(k)} class="self-start" />
+			<RangeCalendar
+				bind:value={range}
+				calendar={kind}
+				locale={L.dateLocale}
+				class="rounded-md border"
+				captionLayout="dropdown"
+			/>
 
 			<div class="flex justify-end gap-2">
 				{#if summary}
-					<Button variant="ghost" size="sm" onclick={clear}>Clear</Button>
+					<Button variant="ghost" size="sm" onclick={clear}>{L.dateClear}</Button>
 				{/if}
 				<Button
 					size="sm"
 					disabled={!range.start || !range.end}
 					onclick={() => range.start && range.end && apply(range.start, range.end)}
 				>
-					Apply
+					{L.dateApply}
 				</Button>
 			</div>
 		</Popover.Content>
 	</Popover.Root>
 
 	{#if summary}
-		<Button variant="ghost" size="icon" aria-label="Clear {label} dates" onclick={clear}>
+		<Button variant="ghost" size="icon" aria-label={L.dateClearAria(label)} onclick={clear}>
 			<X class="size-4" />
 		</Button>
 	{/if}

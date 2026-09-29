@@ -1,3 +1,4 @@
+import { serverLabels } from './labels';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
@@ -105,11 +106,11 @@ export async function saveUploadedFile(file: File | undefined): Promise<string> 
 	// Was dereferenced unguarded — the signature admitted `undefined` and the body assumed
 	// otherwise, so a missing file threw a TypeError from inside the stream plumbing.
 	if (!file || file.size === 0) {
-		throw new Error('No file was uploaded.');
+		throw new Error(serverLabels().noFile);
 	}
 
 	if (file.size > MAX_UPLOAD_BYTES) {
-		throw new Error(`That file is larger than ${MAX_UPLOAD_BYTES / 1024 / 1024}MB.`);
+		throw new Error(serverLabels().fileTooLarge(MAX_UPLOAD_BYTES / 1024 / 1024));
 	}
 
 	// The extension decides how the file is served later, so it is taken from the browser's
@@ -117,7 +118,7 @@ export async function saveUploadedFile(file: File | undefined): Promise<string> 
 	// nothing downstream validates.
 	const declared = file.type?.toLowerCase() ?? '';
 	if (!ACCEPTED_MIME_TYPES.has(declared)) {
-		throw new Error('That file type is not accepted.');
+		throw new Error(serverLabels().fileTypeRefused);
 	}
 
 	const ext =

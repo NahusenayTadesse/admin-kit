@@ -1,3 +1,4 @@
+import { labelText, serverLabels, type Label } from './labels';
 import { fail, type RequestEvent } from '@sveltejs/kit';
 import { setFlash } from 'sveltekit-flash-message/server';
 import type { AnyMySqlColumn, MySqlTable } from 'drizzle-orm/mysql-core';
@@ -17,7 +18,8 @@ type LookupTable = MySqlTable & SoftDeletable & { id: AnyMySqlColumn };
  *
  * `label` is what the user sees in the flash message, e.g. "department".
  */
-export function lookupDeleteAction(table: LookupTable, label: string) {
+export function lookupDeleteAction(table: LookupTable, labelOf: Label) {
+	const name = () => labelText(labelOf);
 	return async ({ request, locals, cookies }: RequestEvent) => {
 		requireSuperAdmin(locals);
 
@@ -25,7 +27,7 @@ export function lookupDeleteAction(table: LookupTable, label: string) {
 		const rowId = Number(data.get('id'));
 
 		if (!rowId) {
-			setFlash({ type: 'error', message: `No ${label} was selected.` }, cookies);
+			setFlash({ type: 'error', message: serverLabels().lookupNoneSelected(name()) }, cookies);
 			return fail(400);
 		}
 
@@ -35,22 +37,25 @@ export function lookupDeleteAction(table: LookupTable, label: string) {
 			);
 
 			if (!deleted) {
-				setFlash({ type: 'error', message: `That ${label} was not found.` }, cookies);
+				setFlash({ type: 'error', message: serverLabels().lookupNotFound(name()) }, cookies);
 				return fail(404);
 			}
 		} catch (err) {
-			console.error(`Error deleting ${label}:`, err);
+			console.error(`Error deleting ${name()}:`, err);
 			setFlash(
 				{
 					type: 'error',
-					message: `Could not delete ${label}: ${err instanceof Error ? err.message : 'Unknown error'}`
+					message: serverLabels().lookupCouldNotDelete(
+						name(),
+						err instanceof Error ? err.message : serverLabels().unknownError
+					)
 				},
 				cookies
 			);
 			return fail(500);
 		}
 
-		setFlash({ type: 'success', message: `${label} deleted.` }, cookies);
+		setFlash({ type: 'success', message: serverLabels().lookupDeleted(name()) }, cookies);
 		return { success: true };
 	};
 }

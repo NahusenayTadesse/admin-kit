@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
@@ -31,6 +32,8 @@
 	}
 
 	let btnStyle = 'text-md w-full! justify-start pl-2! py-6 font-normal';
+
+	const L = useLabels();
 </script>
 
 <Sidebar.Group>
@@ -47,7 +50,7 @@
 										variant={current === item.title ? 'default' : 'ghost'}
 										size="lg"
 										class={btnStyle}
-										title="Goto {item.title}"
+										title={L.goTo(item.title)}
 									>
 										{#if item.icon}
 											<item.icon class="h-5! w-5!" />
@@ -72,7 +75,7 @@
 												onclick={closeSidebar}
 												class="w-full! justify-start text-sm font-normal"
 												href={subItem.url}
-												title="Goto {subItem.title}"
+												title={L.goTo(subItem.title)}
 											>
 												{#if subItem.icon}
 													<subItem.icon class="h-4 w-4" />
@@ -87,7 +90,7 @@
 					{/snippet}
 				</Collapsible.Root>
 			{:else}
-				<Sidebar.Menu class="w-full gap-3" title="Goto {item.title}">
+				<Sidebar.Menu class="w-full gap-3" title={L.goTo(item.title)}>
 					<Sidebar.MenuItem>
 						<Button
 							size="lg"

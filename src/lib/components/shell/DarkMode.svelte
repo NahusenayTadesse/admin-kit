@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 
 	import { resetMode, setMode } from 'mode-watcher';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
+
+	const L = useLabels();
 </script>
 
 <DropdownMenu.Root>
@@ -15,11 +18,11 @@
 		<MoonIcon
 			class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 !transition-all dark:scale-100 dark:rotate-0"
 		/>
-		<span class="sr-only">Toggle theme</span>
+		<span class="sr-only">{L.themeToggle}</span>
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content align="end">
-		<DropdownMenu.Item onclick={() => setMode('light')}>Light</DropdownMenu.Item>
-		<DropdownMenu.Item onclick={() => setMode('dark')}>Dark</DropdownMenu.Item>
-		<DropdownMenu.Item onclick={() => resetMode()}>System</DropdownMenu.Item>
+		<DropdownMenu.Item onclick={() => setMode('light')}>{L.themeLight}</DropdownMenu.Item>
+		<DropdownMenu.Item onclick={() => setMode('dark')}>{L.themeDark}</DropdownMenu.Item>
+		<DropdownMenu.Item onclick={() => resetMode()}>{L.themeSystem}</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

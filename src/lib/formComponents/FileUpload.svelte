@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input/index';
 	import { Label } from '$lib/components/ui/label/index.js';
@@ -22,7 +23,7 @@
 	let {
 		form,
 		name,
-		placeholder = 'PDF or Images (Max 10MB)',
+		placeholder = undefined,
 		image = '',
 		// The prompts, for an app that shows this in another language. English by default.
 		labels = {}
@@ -35,10 +36,11 @@
 		labels?: { prompt?: string; dropHere?: string; optimizing?: string };
 	} = $props();
 
+	const L = useLabels();
 	const text = $derived({
-		prompt: labels.prompt ?? 'Click to upload or drag and drop',
-		dropHere: labels.dropHere ?? 'Drop it here!',
-		optimizing: labels.optimizing ?? 'Optimizing file...'
+		prompt: labels.prompt ?? L.uploadPrompt,
+		dropHere: labels.dropHere ?? L.uploadDropHere,
+		optimizing: labels.optimizing ?? L.uploadOptimizing
 	});
 
 	let file = $state(fileProxy(form, name));
@@ -139,7 +141,7 @@
 							{isDragging ? text.dropHere : text.prompt}
 						{/if}
 					</p>
-					<p class="text-[12px]! text-muted-foreground">{placeholder}</p>
+					<p class="text-[12px]! text-muted-foreground">{placeholder ?? L.uploadHint}</p>
 				</div>
 			</div>
 		</Label>
@@ -180,7 +182,7 @@
 					<iframe src={fileUrl(image)} class="h-64 w-full" frameborder="0" title="pdf-preview"
 					></iframe>
 				{:else}
-					<img src={fileUrl(image)} class="max-h-80 w-full object-contain" alt="Preview" />
+					<img src={fileUrl(image)} class="max-h-80 w-full object-contain" alt={L.preview} />
 				{/if}
 			</div>
 		</div>
@@ -202,7 +204,7 @@
 					<div class="flex flex-col truncate">
 						<span class="truncate text-sm font-medium">{$file[0]?.name}</span>
 						<span class="text-xs text-muted-foreground">
-							{($file[0]?.size / 1024 / 1024).toFixed(2)} MB (Optimized)
+							{($file[0]?.size / 1024 / 1024).toFixed(2)} MB {L.uploadOptimized}
 						</span>
 					</div>
 				</div>
@@ -229,7 +231,7 @@
 						<img
 							src={URL.createObjectURL($file[0])}
 							class="max-h-80 w-full object-contain"
-							alt="Preview"
+							alt={L.preview}
 						/>
 					{/if}
 				{/if}

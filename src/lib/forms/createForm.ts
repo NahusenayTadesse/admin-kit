@@ -1,3 +1,4 @@
+import { englishLabels } from '$lib/labels';
 import {
 	superForm,
 	type FormOptions,
@@ -100,5 +101,15 @@ export function createForm<T extends Record<string, unknown>, M extends FormMess
  */
 export const confirmLeave = () =>
 	new Promise<boolean>((resolve) => {
-		resolve(window.confirm('Do you want to leave?\nChanges you made may not be saved.'));
+		resolve(window.confirm(englishLabels.leaveUnsaved));
+	});
+
+/**
+ * `confirmLeave` in the app's words — for a form in another language:
+ *
+ *     createForm(data.form, schema, { taintedMessage: confirmLeaveWith(L.leaveUnsaved) })
+ */
+export const confirmLeaveWith = (message: string) => () =>
+	new Promise<boolean>((resolve) => {
+		resolve(window.confirm(message));
 	});

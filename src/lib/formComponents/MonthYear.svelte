@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button } from '$lib/components/ui/button';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { getEthiopianYearInt } from '$lib/global';
@@ -57,7 +58,8 @@
 	// 2. Update your derived logic for selectedMonth
 	let selectedMonth = $derived(value ? value.split('_')[0] : '');
 
-	let displayValue = $derived(value || 'Select month and year');
+	const L = useLabels();
+	let displayValue = $derived(value || L.selectMonthYear);
 
 	export const getEthiopianMonth = (month: number | string): string => {
 		let monthNumber: number | undefined;
@@ -139,7 +141,7 @@
 	// 		: formatEthiopianYearMonth(new Date().getFullYear(), new Date().getMonth() + 1)
 	// );
 
-	const formatted = $derived(value ? `${selectedMonth} ${selectedYear}` : 'Select month and year');
+	const formatted = $derived(value ? `${selectedMonth} ${selectedYear}` : L.selectMonthYear);
 	const previousYear = () => (selectedYear ? (selectedYear -= 1) : 0);
 	const nextYear = () => (selectedYear ? (selectedYear += 1) : 0);
 </script>

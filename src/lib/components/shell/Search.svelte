@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import Disc from '@lucide/svelte/icons/disc';
 	import SearchIcon from '@lucide/svelte/icons/search';
@@ -14,19 +15,21 @@
 	// The sidebar's own list, flattened, so the palette cannot offer a page the menu does not
 	// know about — or one this viewer would be refused.
 	let list = $derived(searchEntries(kit.navigation, kit.canOpen, kit.searchExtra));
+
+	const L = useLabels();
 </script>
 
-<DialogComp title="Search the Whole Site" variant="ghost" bind:open={isOpen}>
+<DialogComp title={L.searchTitle} variant="ghost" bind:open={isOpen}>
 	{#snippet trigger(props)}
-		<Button size="sm" variant="ghost" class="w-auto px-4" title="Search for Pages" {...props}>
+		<Button size="sm" variant="ghost" class="w-auto px-4" title={L.searchButton} {...props}>
 			<SearchIcon />
 		</Button>
 	{/snippet}
 	<Command.Root class="rounded-lg shadow-md md:min-w-112.5">
-		<Command.Input placeholder="Type a command or search..." type="search" />
+		<Command.Input placeholder={L.searchPlaceholder} type="search" />
 		<Command.List>
-			<Command.Empty>No results found.</Command.Empty>
-			<Command.Group heading="Suggestions">
+			<Command.Empty>{L.searchEmpty}</Command.Empty>
+			<Command.Group heading={L.searchSuggestions}>
 				{#each list as item (item.url)}
 					<Command.Item>
 						<Disc />

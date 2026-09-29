@@ -12,21 +12,21 @@ work with any database.
 The layout mirrors an app's `src/lib`, so moving a project over is mostly
 `$lib/…` → `@nahu/admin-kit/…`.
 
-| Area               | Import from `@nahu/admin-kit/…`                                                                                                                                                                                                                             |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tables             | `components/Table/data-table.svelte` and its cells: `-sort`, `-links`, `statuses`, `bigText`, `address`, `expiry-cell`, `FilterMenu`; `tableCells` (`userCell`, `ethiopianDate`)                                                                            |
-| Forms              | `formComponents/InputComp.svelte` (and Select/Combobox/Checkbox/Date/FileUpload), `DialogComp`, `FormDialog`, `FormCard`, `Errors`, `Messages`, `LoadingBtn`, `StepButton`, `MonthYear`, `DateMonth`; `forms/createForm`                                    |
-| Filters            | `QueryBuilder.svelte` + `queryFilters` (browser); `server/queryFilters` (the SQL side)                                                                                                                                                                      |
-| Lookup screens     | `components/lookup/LookupPage.svelte`, `LookupSection.svelte`, `types` (`LookupConfig`)                                                                                                                                                                     |
-| CRUD (server)      | `server/crud` (`contentCrud`), `server/childCrud` (`childCrud`, `childActions`, `WriteRefused`), `server/lookupDelete`                                                                                                                                      |
-| Files              | `server/files` (`saveUploadedFile`, `resolveStoredFile`, `mimeFor`, `MAX_UPLOAD_BYTES`), `server/serveFile` (`GET`), `server/fileAudit` (`auditFiles`), `files` (`fileUrl`)                                                                                 |
-| Dashboard shell    | `components/KitProvider.svelte`, `components/shell/AppSidebar`, `NavMain`, `LayoutMenu`, `Search`, `AdminCard`, `DarkMode`                                                                                                                                  |
-| Access             | `access` (`createAccess`, `gateRefusal`, `effectivePermissions`), `navigation` (`NavItem`), `entityLinks`                                                                                                                                                   |
-| Server basics      | `server/db` (`configureKit`), `server/hooks` (`kitHandle`), `server/schema` (`fieldMixins`), `server/softDelete`, `server/permissions`, `server/audit`, `server/dbErrors`, `server/db/insert`, `server/dates`, `server/password`, `server/testing/rollback` |
-| Detail pages, misc | `components/SingleView`, `SingleTable`, `Section`, `DeleteEntity`, `PrintSheet`, `RowButton`, `Empty`, `Loading`, `Copy`, `PasswordGenerator`, `reports/StatCard`, `reports/ReportChart`                                                                    |
-| Helpers            | `global` (Ethiopian dates, `formatETB`, `Item`), `time` (`localToday`, `localDayRange`, …), `expiry`, `utils` (`cn`)                                                                                                                                        |
-| shadcn primitives  | `components/ui/<name>/index.js` — 34 of them                                                                                                                                                                                                                |
-| Theme              | `styles/theme.css`                                                                                                                                                                                                                                          |
+| Area               | Import from `@nahu/admin-kit/…`                                                                                                                                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tables             | `components/Table/data-table.svelte` and its cells: `-sort`, `-links`, `statuses`, `bigText` (long free text: the first `max` characters, 15 by default, and a clickable “…” that opens the rest), `address`, `expiry-cell`, `FilterMenu`; `tableCells` (`userCell`, `ethiopianDate`) |
+| Forms              | `formComponents/InputComp.svelte` (and Select/Combobox/Checkbox/Date/FileUpload), `DialogComp`, `FormDialog`, `FormCard`, `Errors`, `Messages`, `LoadingBtn`, `StepButton`, `MonthYear`, `DateMonth`; `forms/createForm`                                                              |
+| Filters            | `QueryBuilder.svelte` + `queryFilters` (browser); `server/queryFilters` (the SQL side)                                                                                                                                                                                                |
+| Lookup screens     | `components/lookup/LookupPage.svelte`, `LookupSection.svelte`, `types` (`LookupConfig`)                                                                                                                                                                                               |
+| CRUD (server)      | `server/crud` (`contentCrud`), `server/childCrud` (`childCrud`, `childActions`, `WriteRefused`), `server/lookupDelete`                                                                                                                                                                |
+| Files              | `server/files` (`saveUploadedFile`, `resolveStoredFile`, `mimeFor`, `MAX_UPLOAD_BYTES`), `server/serveFile` (`GET`), `server/fileAudit` (`auditFiles`), `files` (`fileUrl`)                                                                                                           |
+| Dashboard shell    | `components/KitProvider.svelte`, `components/shell/AppSidebar`, `NavMain`, `LayoutMenu`, `Search`, `AdminCard`, `DarkMode`                                                                                                                                                            |
+| Access             | `access` (`createAccess`, `gateRefusal`, `effectivePermissions`), `navigation` (`NavItem`), `entityLinks`                                                                                                                                                                             |
+| Server basics      | `server/db` (`configureKit`), `server/hooks` (`kitHandle`), `server/schema` (`fieldMixins`), `server/softDelete`, `server/permissions`, `server/audit`, `server/dbErrors`, `server/db/insert`, `server/dates`, `server/password`, `server/testing/rollback`                           |
+| Detail pages, misc | `components/SingleView`, `SingleTable`, `Section`, `DeleteEntity`, `PrintSheet`, `RowButton`, `Empty`, `Loading`, `Copy`, `PasswordGenerator`, `reports/StatCard`, `reports/ReportChart`                                                                                              |
+| Helpers            | `global` (Ethiopian dates, `formatETB`, `Item`), `time` (`localToday`, `localDayRange`, …), `expiry`, `utils` (`cn`)                                                                                                                                                                  |
+| shadcn primitives  | `components/ui/<name>/index.js` — 34 of them                                                                                                                                                                                                                                          |
+| Theme              | `styles/theme.css`                                                                                                                                                                                                                                                                    |
 
 TypeScript modules import without an extension (`@nahu/admin-kit/server/crud`), components with
 `.svelte`, and barrels with `/index.js`.
@@ -117,6 +117,70 @@ import { user } from './auth.schema';
 export const { secureFields, lesserFields, approvalFields } = fieldMixins(() => user.id);
 ```
 
+## Translating the kit
+
+Every word the kit puts on screen is a label with an English default, so a project that does
+nothing sees nothing change. To show the kit in another language:
+
+- **Components:** call `setKitLabels` once in the app's root `src/routes/+layout.svelte`, so pages
+  outside the dashboard (sign-in, print sheets) get the labels too. Pass a **function**: it is read
+  each time a component renders, so it picks up the viewer's language. Labels that take values
+  are functions themselves.
+
+  ```svelte
+  <script lang="ts">
+  	import { setKitLabels } from '@nahu/admin-kit/labels';
+  	import { m } from '$lib/paraglide/messages.js';
+
+  	setKitLabels(() => ({
+  		tableColumns: m.kit_table_columns(),
+  		pagerPage: (page, pages) => m.kit_pager_page({ page, pages })
+  		// …any the app leaves out stay English
+  	}));
+  </script>
+  ```
+
+  The full list, with the English defaults, is `KitLabels` / `englishLabels` in
+  `src/lib/labels.ts`. `KitProvider` also takes a `labels` prop. Kit components read them with
+  `useLabels()` — Svelte context, never module state, for the per-request reason in `context.ts`.
+
+- **Server messages** (the flash after a save, permission refusals, upload errors): give
+  `configureKit` a `labels` function returning `Partial<ServerLabels>` (`server/labels.ts`). It is
+  called for each message, inside the request, so it can read the request's locale.
+  `childCrud`, `contentCrud` and `lookupDeleteAction` take `label` as a string or a function
+  (`label: () => m.line()`), so the name of the record is translated too.
+
+- **Leaving a form with unsaved changes:** `confirmLeaveWith(message)` instead of `confirmLeave`.
+
+Ethiopian dates and `formatETB` are the same in every language and have no labels.
+
+## Dates: Ethiopian and Gregorian
+
+Every date input in the kit — `InputComp type="date"` and `"dateMultiple"`, `DateInput` (for
+plain GET forms), the table's date-range filter and the QueryBuilder's dates — can be switched
+between the Ethiopian and the Gregorian calendar, clicked on a grid drawn in that calendar
+(thirteen months, Pagume included) or typed as day / month / year, with the same day on the
+other calendar shown as you go.
+
+**What leaves an input is always a Gregorian `YYYY-MM-DD`.** The calendar only changes what is
+shown; the form posts, and the database keeps, Gregorian dates, and the server never sees an
+Ethiopian one. Conversion is exact (`src/lib/calendars.ts`, on `@internationalized/date`'s
+`EthiopicCalendar`), and a day that does not exist (ጳጉሜ 7, 31 September) is refused, not moved.
+
+- Inputs start on the Ethiopian calendar. An app can change that in its root layout with
+  `setKitCalendar('gregorian')` from `@nahu/admin-kit/calendarPreference.svelte`.
+- Switching one input switches them all on the page, and the browser remembers it
+  (`localStorage`, `admin-kit.calendar`); the server always renders the app's default.
+- `calendar="ethiopian"` (or `"gregorian"`) on `InputComp`, `DatePicker` or `DateInput` fixes one
+  field to a calendar, with no switch.
+- The kit's `Calendar` and `RangeCalendar` take `calendar={kind}` too: the grid is drawn on
+  that calendar while `value` stays Gregorian in both directions.
+- Ethiopian dates are written with the Amharic month names in either language; Gregorian ones in
+  the interface's language, from the `dateLocale` label (`en-GB` by default; `am-ET` for an
+  Amharic interface).
+- For code: `formatDateIn(value, kind, locale)`, `partsOf`, `fromParts`, `monthNames`,
+  `inCalendar`, `toGregorian` and `isoDate` in `@nahu/admin-kit/calendars`.
+
 ## Updating a project to a newer kit
 
 npm keeps an installed copy while the version number is unchanged, so bump it after changing the
@@ -163,4 +227,5 @@ npm run package   # svelte-package + publint → dist/
 
 To try a change in a project: `npm run release` here, then `npm install ../admin-kit --install-links`
 there. `bin/setup.js` is the install-time setup.
+
 # admin-kit

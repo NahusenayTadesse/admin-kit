@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import Copy from '$lib/Copy.svelte';
 	import { LoaderCircle } from '@lucide/svelte';
 	import Statuses from './Table/statuses.svelte';
@@ -14,6 +15,8 @@
 	// The markup below iterates this, so it has always been a list of rows —
 	// the old `SingleTable` (singular) annotation made every caller fail to typecheck.
 	let { singleTable }: { singleTable: SingleTableRow[] } = $props();
+
+	const L = useLabels();
 </script>
 
 <!--
@@ -23,15 +26,15 @@
 </div> -->
 
 {#await singleTable}
-	<h1 class="m-2 flex flex-row">Loading <LoaderCircle class="animate-spin" /></h1>
+	<h1 class="m-2 flex flex-row">{L.loading} <LoaderCircle class="animate-spin" /></h1>
 {:then table}
 	<table id="table" class="w-full table-fixed text-left lg:w-full">
 		<thead
 			class="bg-gray-100 font-semibold tracking-wider text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-300"
 		>
 			<tr>
-				<th class="px-4 py-3">Detail</th>
-				<th class="px-4 py-3">Value</th>
+				<th class="px-4 py-3">{L.detail}</th>
+				<th class="px-4 py-3">{L.value}</th>
 			</tr>
 		</thead>
 		<tbody class="text-gray-900 dark:text-gray-100">

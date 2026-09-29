@@ -1,22 +1,45 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
 	import { Calendar } from '$lib/components/ui/calendar';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils.js';
-	import { CalendarDate, getLocalTimeZone, today, parseDate } from '@internationalized/date';
+	import { getLocalTimeZone, today } from '@internationalized/date';
 	import { untrack } from 'svelte';
 	import { CalendarIcon } from '@lucide/svelte';
+	import {
+		formatDateIn,
+		isoDate,
+		otherCalendar,
+		parseIsoDate,
+		type CalendarKind
+	} from '$lib/calendars';
+	import { useCalendar } from '$lib/calendarPreference.svelte';
+	import CalendarSwitch from './CalendarSwitch.svelte';
+	import DateFields from './DateFields.svelte';
 
+	/**
+	 * One date, picked on the Ethiopian or the Gregorian calendar — switchable in the picker, and
+	 * typed or clicked — with the same day on the other calendar shown alongside.
+	 *
+	 * **`data` is always a Gregorian `YYYY-MM-DD`**, whichever calendar is on screen: that is what
+	 * the form posts and what the database keeps. The calendar only changes what is shown.
+	 */
 	let {
 		data = $bindable(),
 		oldDays = false,
 		year = false,
 		futureDays = false,
-		allowEmpty = false
+		allowEmpty = false,
+		calendar: fixedCalendar = undefined,
+		id = undefined
 	}: {
 		data: string;
+		/** Allow days before today. Off: the earliest day offered is today. */
 		oldDays?: boolean;
+		/** A year dropdown in the calendar's heading, for dates years away. */
 		year?: boolean;
+		/** Refuse days after today (a birth date, a delivery that already arrived). */
 		futureDays?: boolean;
 		/**
 		 * Let the field stay empty, and offer a way back to empty.
@@ -27,96 +50,112 @@
 		 * days. A date nobody entered has to stay blank.
 		 */
 		allowEmpty?: boolean;
+		/** Always this calendar, with no switch. Otherwise the person's choice (see `useCalendar`). */
+		calendar?: CalendarKind;
+		/** For a `<label for>`: goes on the button that opens the picker. */
+		id?: string;
 	} = $props();
 
-	const todayDate = $derived(oldDays ? undefined : today(getLocalTimeZone()));
+	const L = useLabels();
+	const preference = useCalendar();
+	// The calendar this browser chose last time; after the first render, so the server's matches.
+	$effect(() => preference.restore());
 
-	/** A `YYYY-MM-DD` as a calendar date, or null when it is empty or not a date. */
-	function parsed(value: string | undefined): CalendarDate | null {
-		if (!value) return null;
-		try {
-			return parseDate(value);
-		} catch {
-			return null;
-		}
-	}
+	const kind = $derived(fixedCalendar ?? preference.kind);
+	const other = $derived(otherCalendar(kind));
+
+	const tz = getLocalTimeZone();
+	const todayIso = today(tz).toString();
+	const min = $derived(oldDays ? undefined : todayIso);
+	const max = $derived(futureDays ? todayIso : undefined);
 
 	/*
-	 * `data` is the only copy of the date; the calendar reads it and writes it back.
-	 *
-	 * This used to keep its own `$state` copy, seeded from `data` once and pushed back into `data`
-	 * by an effect. A value written from outside after mounting was then overwritten with the
-	 * picker's stale copy, depending on which effect flushed first: the appointment booking dialog
-	 * prefilled the day being viewed, and every booking silently landed on today.
+	 * `data` is the only copy of the date; the calendar and the typed fields read it and write it
+	 * back. (A private copy, seeded once, once let a value written from outside after mounting be
+	 * overwritten with a stale one: every booking silently landed on today.)
 	 */
-	const value = $derived(parsed(data) ?? todayDate ?? today(getLocalTimeZone()));
+	const value = $derived(parseIsoDate(data) ?? today(tz));
 
-	// An empty field still starts at today, as it always has — but only when it is empty, so it
-	// can never replace a date somebody set, and never when the field may be left blank.
+	// An empty field still starts at today — but only when it is empty, so it can never replace a
+	// date somebody set, and never when the field may be left blank.
 	$effect(() => {
 		if (!data && !allowEmpty) untrack(() => (data = value.toString()));
 	});
 
 	/** Empty and allowed to be: the trigger says so rather than showing a date nobody chose. */
 	const isEmpty = $derived(allowEmpty && !data);
+	const shown = $derived(isEmpty ? L.notSet : formatDateIn(value, kind, L.dateLocale));
+	const alongside = $derived(isEmpty ? '' : formatDateIn(value, other, L.dateLocale, 'short'));
 
-	const formatEthiopianDate = (date: CalendarDate | undefined): string => {
-		if (!date) return '';
-
-		const formatter = new Intl.DateTimeFormat('am-ET', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-			calendar: 'ethiopic'
-		});
-
-		return formatter.format(date.toDate(getLocalTimeZone()));
-	};
-	const displayDate = $derived(isEmpty ? 'Not set' : formatEthiopianDate(value));
+	const presets = $derived(
+		[
+			{ label: L.dateToday, days: 0 },
+			{ label: L.dateTomorrow, days: 1 },
+			{ label: L.dateIn3Days, days: 3 },
+			{ label: L.dateInAWeek, days: 7 },
+			{ label: L.dateIn2Weeks, days: 14 }
+		]
+			.map((p) => ({ ...p, iso: today(tz).add({ days: p.days }).toString() }))
+			.filter((p) => (!min || p.iso >= min) && (!max || p.iso <= max))
+	);
 </script>
 
 <Popover.Root>
 	<Popover.Trigger
+		{id}
 		class={cn(
 			buttonVariants({
 				variant: 'outline',
-				class: 'justify-between '
+				class: 'h-auto min-h-9 justify-between py-1.5'
 			})
 		)}
 	>
-		<div class="flex items-center gap-2">
+		<span class="flex items-center gap-2">
 			<CalendarIcon />
-			{displayDate}
-		</div>
+			<span class="flex flex-col items-start leading-tight">
+				<span>{shown}</span>
+				{#if alongside}
+					<span class="text-xs font-normal text-muted-foreground">{alongside}</span>
+				{/if}
+			</span>
+		</span>
 	</Popover.Trigger>
 
-	<Popover.Content class="flex flex-wrap gap-2 border-t p-0 px-2 py-4!">
-		<div class="flex w-full items-center justify-between gap-2 text-sm text-muted-foreground">
-			<span>Ethiopian Date: <span class="font-semibold text-foreground">{displayDate}</span></span>
+	<Popover.Content class="flex w-auto max-w-[20rem] flex-col gap-3 p-3">
+		<div class="flex items-center justify-between gap-2">
+			{#if fixedCalendar}
+				<span class="text-xs text-muted-foreground">
+					{kind === 'ethiopian' ? L.calendarEthiopian : L.calendarGregorian}
+				</span>
+			{:else}
+				<CalendarSwitch value={kind} onchange={(k) => preference.set(k)} />
+			{/if}
 			{#if allowEmpty && data}
-				<Button variant="ghost" size="sm" onclick={() => (data = '')}>Clear</Button>
+				<Button variant="ghost" size="sm" onclick={() => (data = '')}>{L.clear}</Button>
 			{/if}
 		</div>
 
+		<DateFields bind:value={() => data ?? '', (v) => (data = v)} {kind} {min} {max} />
+
 		<Calendar
-			locale="am-ET"
+			calendar={kind}
+			locale={L.dateLocale}
 			type="single"
 			captionLayout={year ? 'dropdown-years' : 'label'}
-			minValue={todayDate}
-			maxValue={futureDays ? today(getLocalTimeZone()) : undefined}
-			bind:value={() => value, (next) => next && (data = next.toString())}
+			minValue={parseIsoDate(min) ?? undefined}
+			maxValue={parseIsoDate(max) ?? undefined}
+			bind:value={() => value, (next) => next && (data = isoDate(next))}
+			class="rounded-md border"
 		/>
-		{#each [{ label: 'Today', value: 0 }, { label: 'Tomorrow', value: 1 }, { label: 'In 3 days', value: 3 }, { label: 'In a week', value: 7 }, { label: 'In 2 weeks', value: 14 }] as preset (preset.value)}
-			<Button
-				variant="outline"
-				size="sm"
-				class="flex-1"
-				onclick={() => {
-					data = today(getLocalTimeZone()).add({ days: preset.value }).toString();
-				}}
-			>
-				{preset.label}
-			</Button>
-		{/each}
+
+		{#if presets.length}
+			<div class="flex flex-wrap gap-2">
+				{#each presets as preset (preset.days)}
+					<Button variant="outline" size="sm" class="flex-1" onclick={() => (data = preset.iso)}>
+						{preset.label}
+					</Button>
+				{/each}
+			</div>
+		{/if}
 	</Popover.Content>
 </Popover.Root>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { TriangleAlert } from '@lucide/svelte';
 
@@ -14,7 +15,7 @@
 	 */
 	let {
 		show = false,
-		title = 'Check this before you continue',
+		title = undefined,
 		message = '',
 		name = 'acknowledgeRisk',
 		checked = $bindable(false)
@@ -27,6 +28,8 @@
 		name?: string;
 		checked?: boolean;
 	} = $props();
+
+	const L = useLabels();
 </script>
 
 {#if show}
@@ -36,14 +39,14 @@
 	>
 		<p class="flex items-center gap-2 text-sm font-semibold text-destructive">
 			<TriangleAlert class="size-4 shrink-0" />
-			{title}
+			{title ?? L.riskCheckFirst}
 		</p>
 		{#if message}
 			<p class="text-sm text-muted-foreground">{message}</p>
 		{/if}
 		<label class="mt-1 flex items-center gap-2 text-sm font-medium">
-			<Checkbox bind:checked aria-label={title} />
-			I understand the risks
+			<Checkbox bind:checked aria-label={title ?? L.riskCheckFirst} />
+			{L.riskConfirm}
 		</label>
 		<!--
 			Rendered only when ticked, never as value="false". A string "false" is

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { onMount, onDestroy } from 'svelte';
 	import {
 		SlidersHorizontal,
@@ -45,14 +46,15 @@
 	let { data, filterKeys, filteredList = $bindable(data), class: className = '' }: Props = $props();
 
 	// ── Chart type selector ──────────────────────────────────────────────────
-	const CHART_TYPES: { value: ChartType; label: string }[] = [
-		{ value: 'bar', label: 'Bar' },
-		{ value: 'line', label: 'Line' },
-		{ value: 'pie', label: 'Pie' },
-		{ value: 'doughnut', label: 'Doughnut' },
-		{ value: 'polarArea', label: 'Polar Area' },
-		{ value: 'radar', label: 'Radar' }
-	];
+	const L = useLabels();
+	const CHART_TYPES: { value: ChartType; label: string }[] = $derived([
+		{ value: 'bar', label: L.chartBar },
+		{ value: 'line', label: L.chartLine },
+		{ value: 'pie', label: L.chartPie },
+		{ value: 'doughnut', label: L.chartDoughnut },
+		{ value: 'polarArea', label: L.chartPolarArea },
+		{ value: 'radar', label: L.chartRadar }
+	]);
 
 	let type = $state<ChartType>();
 	let chartTypeOpen = $state(false);
@@ -120,7 +122,7 @@
 		selectedFilters = {};
 		filterKeys.forEach((key) => (selectedFilters[key] = []));
 		filteredList = data;
-		toast.success('Filters reset');
+		toast.success(L.fmResetDone);
 		isResetting = false;
 	};
 
@@ -173,7 +175,7 @@
 			tooltip: {
 				callbacks: {
 					label: (ctx: any) =>
-						` ${ctx.label}: ${filteredList.filter((c) => c[key] === ctx.label)?.length} items`
+						L.fmItems(ctx.label, filteredList.filter((c) => c[key] === ctx.label)?.length ?? 0)
 				}
 			}
 		},
@@ -274,7 +276,7 @@
 						</Button>
 					{/snippet}
 				</Tooltip.Trigger>
-				<Tooltip.Content><p>Filter Charts</p></Tooltip.Content>
+				<Tooltip.Content><p>{L.fmTitle}</p></Tooltip.Content>
 			</Tooltip.Root>
 		</Tooltip.Provider>
 		<div>
@@ -299,7 +301,7 @@
 							</Button>
 						{/snippet}
 					</Tooltip.Trigger>
-					<Tooltip.Content><p>Filter Charts</p></Tooltip.Content>
+					<Tooltip.Content><p>{L.fmTitle}</p></Tooltip.Content>
 				</Tooltip.Root>
 			</Tooltip.Provider>
 		</div>
@@ -312,8 +314,8 @@
 	<div class="mt-4" transition:fly={{ x: -100, duration: 300 }}>
 		<Card class="w-full">
 			<CardHeader>
-				<CardTitle>Filter Charts</CardTitle>
-				<CardDescription>Narrow the data shown in each chart</CardDescription>
+				<CardTitle>{L.fmTitle}</CardTitle>
+				<CardDescription>{L.fmDescription}</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div class="space-y-2 rounded-xl border border-border/50 bg-card p-6 shadow-sm">
@@ -321,9 +323,9 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<SlidersHorizontal class="size-5 text-primary" />
-							<h3 class="text-base font-semibold">Filters</h3>
+							<h3 class="text-base font-semibold">{L.fmFilters}</h3>
 							{#if activeFilterCount > 0}
-								<Badge variant="secondary" class="ml-2">{activeFilterCount} active</Badge>
+								<Badge variant="secondary" class="ml-2">{L.fmActive(activeFilterCount)}</Badge>
 							{/if}
 						</div>
 						<Button
@@ -333,7 +335,7 @@
 							onclick={resetFilters}
 						>
 							<RotateCcw class="size-4 {isResetting ? 'animate-spin' : ''}" />
-							<span class="hidden sm:inline">Reset</span>
+							<span class="hidden sm:inline">{L.fmReset}</span>
 						</Button>
 					</div>
 
@@ -354,12 +356,14 @@
 											>
 												<span class="truncate">
 													{#if selectedFilters[filterKey]?.length === 0}
-														<span class="text-muted-foreground">All {humanLabel(filterKey)}</span>
+														<span class="text-muted-foreground"
+															>{L.fmAll(humanLabel(filterKey))}</span
+														>
 													{:else if selectedFilters[filterKey]?.length === 1}
 														<span class="font-medium">{selectedFilters[filterKey][0]}</span>
 													{:else}
 														<span class="font-medium"
-															>{selectedFilters[filterKey].length} selected</span
+															>{L.fmSelected(selectedFilters[filterKey].length)}</span
 														>
 													{/if}
 												</span>
@@ -369,9 +373,9 @@
 									</Popover.Trigger>
 									<Popover.Content class="w-50 p-0">
 										<Command.Root>
-											<Command.Input placeholder={`Search ${pluralize(filterKey)}...`} />
+											<Command.Input placeholder={L.fmSearch(pluralize(filterKey))} />
 											<Command.List>
-												<Command.Empty>No {pluralize(filterKey)} found.</Command.Empty>
+												<Command.Empty>{L.noneFound(pluralize(filterKey))}</Command.Empty>
 												<Command.Group>
 													{#each getDistinctValues(filterKey) as value}
 														<Command.Item
@@ -423,12 +427,14 @@
 				<!-- results count -->
 				<div class="mt-4 flex items-center justify-between rounded-lg bg-muted/30 px-4 py-3">
 					<p class="text-sm text-muted-foreground">
-						Showing <span class="font-semibold text-foreground">{filteredList.length}</span> of
-						<span class="font-semibold text-foreground">{data.length}</span> records
+						{L.fmShowing} <span class="font-semibold text-foreground">{filteredList.length}</span>
+						{L.fmOf}
+						<span class="font-semibold text-foreground">{data.length}</span>
+						{L.fmRecords}
 					</p>
 					{#if activeFilterCount > 0}
 						<p class="text-xs text-muted-foreground">
-							{activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}
+							{L.fmActiveFilters(activeFilterCount)}
 						</p>
 					{/if}
 				</div>
@@ -446,7 +452,7 @@
 					<Button variant="outline" class="w-44 justify-between" {...props}>
 						<span class="flex items-center gap-2">
 							<ChartIcon class="size-4 text-primary" />
-							<span>{CHART_TYPES.find((c) => c.value === type)?.label ?? 'Chart Type'}</span>
+							<span>{CHART_TYPES.find((c) => c.value === type)?.label ?? L.fmChartType}</span>
 						</span>
 						<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
@@ -510,13 +516,10 @@
 									{humanLabel(key)}
 								</CardTitle>
 								<CardDescription class="mt-1">
-									Distribution of {humanLabel(key).toLowerCase()} across
-									{filteredList.length} record{filteredList.length !== 1 ? 's' : ''}
+									{L.fmDistribution(humanLabel(key).toLowerCase(), filteredList.length)}
 									{#if selectedFilters[key]?.length > 0}
 										· <span class="text-primary"
-											>{selectedFilters[key].length} value{selectedFilters[key].length > 1
-												? 's'
-												: ''} highlighted</span
+											>{L.fmHighlighted(selectedFilters[key].length)}</span
 										>
 									{/if}
 								</CardDescription>
@@ -528,11 +531,11 @@
 						<!-- tip: click a bar/slice to toggle that filter -->
 						{#if type === 'bar' || type === 'line'}
 							<p class="mb-3 text-xs text-muted-foreground">
-								💡 Click a bar to toggle that value as a filter
+								{L.fmClickBar}
 							</p>
 						{:else}
 							<p class="mb-3 text-xs text-muted-foreground">
-								💡 Click a segment to toggle that value as a filter
+								{L.fmClickSegment}
 							</p>
 						{/if}
 						<div class="relative h-72 w-full">

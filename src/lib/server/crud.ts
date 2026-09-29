@@ -1,3 +1,4 @@
+import { labelText, serverLabels, type Label } from './labels';
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { and, asc, eq, sql, type AnyColumn, type SQL } from 'drizzle-orm';
@@ -83,7 +84,8 @@ interface CrudOptions<T extends AnyTable> {
 	/** The Drizzle table being managed. */
 	table: T;
 	/** Singular, human-readable name used in toast messages, e.g. "Farm". */
-	label: string;
+	/** What the flash messages call a row: a string, or a function for a translated name. */
+	label: Label;
 	addSchema: AnySchema;
 	editSchema: AnySchema;
 	/** Fields holding an uploaded File; saved to disk and stored as a filename. */
@@ -293,7 +295,7 @@ export function contentCrud<T extends AnyTable>({
 			if (!form.valid) {
 				return message(
 					form,
-					{ type: 'error', text: 'Please check the form for errors' },
+					{ type: 'error', text: serverLabels().crudCheckForm },
 					{ status: 400 }
 				);
 			}
@@ -311,7 +313,7 @@ export function contentCrud<T extends AnyTable>({
 				} else {
 					await db.insert(table).values(values as T['$inferInsert']);
 				}
-				return message(form, { type: 'success', text: `${label} added` });
+				return message(form, { type: 'success', text: serverLabels().crudAdded(labelText(label)) });
 			} catch (err) {
 				// A rule the transform enforced: the reason under its field, as `childCrud` does.
 				if (err instanceof WriteRefused) {
@@ -319,16 +321,20 @@ export function contentCrud<T extends AnyTable>({
 					return message(form, { type: 'error', text: err.message }, { status: 400 });
 				}
 				if (isDuplicateKey(err)) {
-					setError(form, uniqueField as never, `That ${label.toLowerCase()} already exists.`);
+					setError(form, uniqueField as never, serverLabels().crudExists(labelText(label)));
 					return message(
 						form,
-						{ type: 'error', text: `That ${label.toLowerCase()} already exists.` },
+						{ type: 'error', text: serverLabels().crudExists(labelText(label)) },
 						{ status: 400 }
 					);
 				}
 
-				console.error(`Failed to add ${label}:`, err);
-				return message(form, { type: 'error', text: `Could not add ${label}` }, { status: 500 });
+				console.error(`Failed to add ${labelText(label)}:`, err);
+				return message(
+					form,
+					{ type: 'error', text: serverLabels().crudCouldNotAdd(labelText(label)) },
+					{ status: 500 }
+				);
 			}
 		},
 
@@ -338,7 +344,7 @@ export function contentCrud<T extends AnyTable>({
 			if (!form.valid) {
 				return message(
 					form,
-					{ type: 'error', text: 'Please check the form for errors' },
+					{ type: 'error', text: serverLabels().crudCheckForm },
 					{ status: 400 }
 				);
 			}
@@ -374,7 +380,10 @@ export function contentCrud<T extends AnyTable>({
 						});
 					}
 				});
-				return message(form, { type: 'success', text: `${label} updated` });
+				return message(form, {
+					type: 'success',
+					text: serverLabels().crudUpdated(labelText(label))
+				});
 			} catch (err) {
 				// A rule the transform enforced: the reason under its field, as `childCrud` does.
 				if (err instanceof WriteRefused) {
@@ -382,16 +391,20 @@ export function contentCrud<T extends AnyTable>({
 					return message(form, { type: 'error', text: err.message }, { status: 400 });
 				}
 				if (isDuplicateKey(err)) {
-					setError(form, uniqueField as never, `That ${label.toLowerCase()} already exists.`);
+					setError(form, uniqueField as never, serverLabels().crudExists(labelText(label)));
 					return message(
 						form,
-						{ type: 'error', text: `That ${label.toLowerCase()} already exists.` },
+						{ type: 'error', text: serverLabels().crudExists(labelText(label)) },
 						{ status: 400 }
 					);
 				}
 
-				console.error(`Failed to update ${label}:`, err);
-				return message(form, { type: 'error', text: `Could not update ${label}` }, { status: 500 });
+				console.error(`Failed to update ${labelText(label)}:`, err);
+				return message(
+					form,
+					{ type: 'error', text: serverLabels().crudCouldNotUpdate(labelText(label)) },
+					{ status: 500 }
+				);
 			}
 		},
 
@@ -409,7 +422,11 @@ export function contentCrud<T extends AnyTable>({
 
 			const form = await superValidate(request, zod4(idSchema));
 			if (!form.valid) {
-				return message(form, { type: 'error', text: 'Invalid request' }, { status: 400 });
+				return message(
+					form,
+					{ type: 'error', text: serverLabels().crudInvalidRequest },
+					{ status: 400 }
+				);
 			}
 
 			try {
@@ -424,10 +441,17 @@ export function contentCrud<T extends AnyTable>({
 					// delete — the caller gets a hard delete or nothing at all.
 					await db.delete(table).where(eq(table.id, id));
 				}
-				return message(form, { type: 'success', text: `${label} deleted` });
+				return message(form, {
+					type: 'success',
+					text: serverLabels().crudDeleted(labelText(label))
+				});
 			} catch (err) {
-				console.error(`Failed to delete ${label}:`, err);
-				return message(form, { type: 'error', text: `Could not delete ${label}` }, { status: 500 });
+				console.error(`Failed to delete ${labelText(label)}:`, err);
+				return message(
+					form,
+					{ type: 'error', text: serverLabels().crudCouldNotDelete(labelText(label)) },
+					{ status: 500 }
+				);
 			}
 		}
 	};

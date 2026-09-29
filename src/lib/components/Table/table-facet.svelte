@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import Check from '@lucide/svelte/icons/check';
 	import Filter from '@lucide/svelte/icons/filter';
 	import * as Popover from '$lib/components/ui/popover/index.js';
@@ -38,6 +39,8 @@
 	let open = $state(false);
 
 	const total = $derived(facets.reduce((sum, f) => sum + f.count, 0));
+
+	const L = useLabels();
 </script>
 
 {#if facets.length}
@@ -50,7 +53,7 @@
 					size="sm"
 					class="h-7 gap-1 px-1.5 data-[active=true]:text-primary"
 					data-active={selected.length > 0}
-					aria-label="Filter by {label}"
+					aria-label={L.facetFilterBy(label)}
 				>
 					<Filter class="size-3.5" />
 					{#if selected.length}
@@ -62,9 +65,9 @@
 
 		<Popover.Content class="w-60 p-0" align="start">
 			<Command.Root>
-				<Command.Input placeholder="Filter {label.toLowerCase()}…" />
+				<Command.Input placeholder={L.facetFilterPlaceholder(label)} />
 				<Command.List>
-					<Command.Empty>No values.</Command.Empty>
+					<Command.Empty>{L.facetNoValues}</Command.Empty>
 					<Command.Group>
 						{#each facets as facet (facet.value)}
 							{@const isOn = selected.includes(facet.value)}
@@ -100,7 +103,7 @@
 									open = false;
 								}}
 							>
-								<span class="w-full text-center text-sm">Clear {label.toLowerCase()}</span>
+								<span class="w-full text-center text-sm">{L.facetClear(label)}</span>
 							</Command.Item>
 						</Command.Group>
 					{/if}
@@ -108,8 +111,7 @@
 			</Command.Root>
 
 			<div class="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
-				{total.toLocaleString()} rows across {facets.length}
-				{facets.length === 1 ? 'value' : 'values'}
+				{L.facetSummary(total.toLocaleString(), facets.length)}
 			</div>
 		</Popover.Content>
 	</Popover.Root>

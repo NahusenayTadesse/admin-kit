@@ -1,3 +1,4 @@
+import { serverLabels } from './labels';
 import fs from 'node:fs';
 import { Readable } from 'node:stream';
 import { error, redirect } from '@sveltejs/kit';
@@ -62,7 +63,7 @@ export function createFileHandler<L extends { user?: unknown }>({
 		locals: L;
 	}): Promise<Response> => {
 		if (!locals.user) redirect(302, loginPath());
-		if (!(await canRead(locals))) error(404, 'Not found');
+		if (!(await canRead(locals))) error(404, serverLabels().notFound);
 
 		return streamStoredFile(params.name, request, 'private');
 	};
@@ -83,7 +84,7 @@ export function streamStoredFile(
 ): Response {
 	// Rejects a name that resolves outside the store rather than resolving it and hoping.
 	const filePath = resolveStoredFile(name);
-	if (!filePath) error(404, 'Not found');
+	if (!filePath) error(404, serverLabels().notFound);
 
 	const stats = fs.statSync(filePath);
 	const etag = `W/"${stats.size}-${stats.mtime.getTime()}"`;

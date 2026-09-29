@@ -1,3 +1,4 @@
+import { serverLabels } from './labels';
 import { error } from '@sveltejs/kit';
 
 /**
@@ -32,7 +33,7 @@ export function hasPermission(locals: PermissionLocals, permission: string): boo
  */
 export function requirePermission(locals: PermissionLocals, permission: string) {
 	if (!hasPermission(locals, permission)) {
-		error(403, 'You do not have permission to do that.');
+		error(403, serverLabels().noPermission);
 	}
 }
 
@@ -42,6 +43,6 @@ export function requirePermission(locals: PermissionLocals, permission: string) 
  */
 export function requireSuperAdmin(locals: PermissionLocals) {
 	if (!locals.isSuperAdmin) {
-		error(403, 'Only a super administrator can delete records.');
+		error(403, serverLabels().superAdminOnly);
 	}
 }

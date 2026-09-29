@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Button } from '$lib/components/ui/button/index';
 	import { Download, Grid3x3, Printer } from '@lucide/svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
@@ -172,7 +173,7 @@
 	html, body {
 		margin: 0;
 		padding: 0;
-		font-family: Helvetica, Arial, sans-serif;
+		font-family: Helvetica, Arial, 'Noto Sans Ethiopic', 'Nyala', 'Kefa', 'Abyssinica SIL', sans-serif;
 		color: #0f172a;
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
@@ -223,7 +224,7 @@
 </head>
 <body>
 	<h1 class="report-title">${escapeHtml(fileName.replace(/[-_]/g, ' '))}</h1>
-	<p class="report-meta">Printed ${escapeHtml(printedAt)} &middot; ${parsed.rows.length} rows</p>
+	<p class="report-meta">${escapeHtml(L.tablePrinted(printedAt, parsed.rows.length))}</p>
 	<table>
 		<thead><tr>${headHtml}</tr></thead>
 		<tbody>${bodyHtml}</tbody>
@@ -290,6 +291,8 @@
 		link.click();
 		URL.revokeObjectURL(url);
 	}
+
+	const L = useLabels();
 </script>
 
 <DropdownMenu.Root>
@@ -303,12 +306,14 @@
 	<DropdownMenu.Content align="end">
 		<DropdownMenu.Item class="capitalize">
 			<Button variant="default" class="w-full justify-start gap-2" onclick={printTable}>
-				<Printer class="size-4 text-white dark:text-black" /> Print
+				<Printer class="size-4 text-white dark:text-black" />
+				{L.tablePrint}
 			</Button>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item class="capitalize">
 			<Button variant="default" class="w-full justify-start gap-2" onclick={exportTableToCSV}>
-				<Grid3x3 class="size-4 text-white dark:text-black" /> Export to CSV
+				<Grid3x3 class="size-4 text-white dark:text-black" />
+				{L.tableExportCsv}
 			</Button>
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>

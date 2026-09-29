@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
 	import { type Item } from '$lib/global';
@@ -47,6 +48,8 @@
 			checkedValues = items.map((item) => Number(item.value)); // numbers here too
 		}
 	}
+
+	const L = useLabels();
 </script>
 
 <div class="flex items-center gap-2 border-b pb-1">
@@ -57,7 +60,7 @@
 			indeterminate={someSelected}
 			onCheckedChange={toggleSelectAll}
 		/>
-		Select All
+		{L.selectAll}
 	</Label>
 </div>
 

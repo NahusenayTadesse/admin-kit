@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 	import type { SuperForm } from 'sveltekit-superforms';
 	import type { LookupField, LookupOptions } from './types';
@@ -38,10 +39,12 @@
 	/** Dropdown options for a `boolean` field, in the field's own wording. */
 	function booleanOptions(field: LookupField) {
 		return [
-			{ value: true, name: field.trueLabel ?? 'Active' },
-			{ value: false, name: field.falseLabel ?? 'Inactive' }
+			{ value: true, name: field.trueLabel ?? L.lookupActive },
+			{ value: false, name: field.falseLabel ?? L.lookupInactive }
 		];
 	}
+
+	const L = useLabels();
 </script>
 
 {#each visible as field (field.name)}

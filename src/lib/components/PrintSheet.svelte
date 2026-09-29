@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import type { Snippet } from 'svelte';
 	import Printer from '@lucide/svelte/icons/printer';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -21,17 +22,19 @@
 		fallbackName?: string;
 		children: Snippet;
 	} = $props();
+
+	const L = useLabels();
 </script>
 
 <main class="mx-auto flex max-w-3xl flex-col gap-6 bg-background p-8 text-foreground print:p-0">
 	<div class="flex justify-end print:hidden">
-		<Button onclick={() => window.print()}><Printer class="size-4" /> Print</Button>
+		<Button onclick={() => window.print()}><Printer class="size-4" /> {L.print}</Button>
 	</div>
 
 	<header class="flex flex-col gap-1 border-b pb-4">
 		<p class="text-2xl font-bold">{branch.name ?? fallbackName}</p>
 		{#if branch.address}<p class="text-sm">{branch.address}</p>{/if}
-		{#if branch.phone}<p class="text-sm">Tel. {branch.phone}</p>{/if}
+		{#if branch.phone}<p class="text-sm">{L.tel(branch.phone)}</p>{/if}
 	</header>
 
 	{@render children()}

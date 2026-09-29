@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
@@ -25,6 +26,7 @@
 		 */
 		label?: string;
 	} = $props();
+	const L = useLabels();
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
 
@@ -38,7 +40,7 @@
 
 	const triggerContent = $derived(
 		// Use String coercion to ensure "1" matches 1
-		items.find((f: Item) => String(f.value) === String(value))?.name ?? 'Select ' + fieldName
+		items.find((f: Item) => String(f.value) === String(value))?.name ?? L.select(fieldName)
 	);
 
 	// We want to refocus the trigger button when the user selects
@@ -71,9 +73,11 @@
 
 	<Popover.Content class="w-full p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search {searchName}..." />
+			<Command.Input placeholder={L.searchFor(searchName)} />
 			<Command.List>
-				<Command.Empty>No {name.replace(/([a-z])([A-Z])/g, '$1 $2')} found.</Command.Empty>
+				<Command.Empty
+					>{L.noneFound(label ?? name.replace(/([a-z])([A-Z])/g, '$1 $2'))}</Command.Empty
+				>
 				<Command.Group>
 					{#each items as item (item.value)}
 						<Command.Item

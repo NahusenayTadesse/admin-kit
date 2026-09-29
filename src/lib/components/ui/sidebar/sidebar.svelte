@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLAttributes } from 'svelte/elements';
@@ -20,6 +21,8 @@
 	} = $props();
 
 	const sidebar = useSidebar();
+
+	const L = useLabels();
 </script>
 
 {#if collapsible === 'none'}
@@ -44,8 +47,8 @@
 			{side}
 		>
 			<Sheet.Header class="sr-only">
-				<Sheet.Title>Sidebar</Sheet.Title>
-				<Sheet.Description>Displays the mobile sidebar.</Sheet.Description>
+				<Sheet.Title>{L.sidebar}</Sheet.Title>
+				<Sheet.Description>{L.sidebarDescription}</Sheet.Description>
 			</Sheet.Header>
 			<div class="flex h-full w-full flex-col">
 				{@render children?.()}

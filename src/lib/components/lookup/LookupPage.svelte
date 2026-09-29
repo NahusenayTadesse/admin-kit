@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Plus } from '@lucide/svelte';
 
 	import { Button } from '$lib/components/ui/button/index';
@@ -68,12 +69,14 @@
 		) as LookupOptions
 	);
 
+	const L = useLabels();
 	const columns = $derived(
 		lookupColumns(config, {
 			editForm: data.editForm,
 			canDelete: data.isSuperAdmin,
 			options,
-			editSchema: schemas?.edit
+			editSchema: schemas?.edit,
+			labels: L
 		})
 	);
 </script>
@@ -83,16 +86,16 @@
 </svelte:head>
 
 {#if !config.fixedRows}
-	<DialogComp bind:open title="+ Add New {config.entity}" variant="default">
+	<DialogComp bind:open title={L.lookupAddNewTitle(config.entity)} variant="default">
 		<form action="?/add" use:enhance id="main" class="flex flex-col gap-4" method="post">
 			<Errors allErrors={$allErrors} />
 			<LookupFields fields={config.fields} {form} {errors} entity={config.entity} {options} />
 
 			<Button type="submit" form="main">
 				{#if $delayed}
-					<LoadingBtn name="Adding {config.entity}" />
+					<LoadingBtn name={L.lookupAdding(config.entity)} />
 				{:else}
-					<Plus /> Add {config.entity}
+					<Plus /> {L.lookupAdd(config.entity)}
 				{/if}
 			</Button>
 		</form>

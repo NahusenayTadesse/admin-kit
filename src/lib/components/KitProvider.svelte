@@ -4,6 +4,7 @@
 	import { effectivePermissions, type Access } from '$lib/access';
 	import type { NavItem, SearchEntry } from '$lib/navigation';
 	import type { EntityRoutes } from '$lib/entityLinks';
+	import { setKitLabels, type KitLabels } from '$lib/labels';
 
 	/**
 	 * Wraps the dashboard layout once, so every kit component below it knows the viewer's
@@ -20,6 +21,7 @@
 		navigation = [],
 		searchExtra = [],
 		entities = {},
+		labels = undefined,
 		children
 	}: {
 		permList?: string[];
@@ -30,8 +32,17 @@
 		/** Pages the search palette offers beyond the menu. */
 		searchExtra?: SearchEntry[];
 		entities?: EntityRoutes;
+		/**
+		 * The words the kit's components show, in the app's language. Usually set once in the root
+		 * layout with `setKitLabels` instead, so pages outside the dashboard get them too.
+		 */
+		labels?: Partial<KitLabels> | (() => Partial<KitLabels>);
 		children: Snippet;
 	} = $props();
+
+	// Only when given: a root layout may already have set them for the whole app.
+	// svelte-ignore state_referenced_locally
+	if (labels) setKitLabels(labels);
 
 	// Getters, so every reader follows the layout's data as it changes.
 	setKit({

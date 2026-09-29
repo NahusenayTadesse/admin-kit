@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends Record<string, unknown> = Record<string, unknown>">
+	import { useLabels } from '$lib/labels';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
 	import { Button } from '$lib/components/ui/button';
@@ -105,8 +106,8 @@
 	}
 
 	let {
-		title = 'Query Builder',
-		description = 'Filter, search, and manage dataset limits',
+		title = undefined,
+		description = undefined,
 
 		showDate = false,
 		showSearch = true,
@@ -129,7 +130,7 @@
 
 		submitMode = 'manual',
 		debounceMs = 350,
-		searchPlaceholder = 'Search rows...',
+		searchPlaceholder = undefined,
 
 		isLoading = false,
 		totalResults,
@@ -335,6 +336,8 @@
 
 		emitChange();
 	}
+
+	const L = useLabels();
 </script>
 
 {#snippet statusBadges()}
@@ -347,7 +350,7 @@
 
 	{#if typeof totalResults === 'number'}
 		<Badge variant="secondary" class="font-medium">
-			{totalResults.toLocaleString()} result{totalResults !== 1 ? 's' : ''}
+			{L.qbResults(totalResults)}
 		</Badge>
 	{/if}
 {/snippet}
@@ -368,7 +371,7 @@
 			onclick={() => (open = true)}
 		>
 			<Funnel class="size-4" />
-			{title}
+			{title ?? L.qbTitle}
 			{#if activeFilterCount > 0}
 				<Badge variant="secondary" class="ml-1">{activeFilterCount}</Badge>
 			{/if}
@@ -385,7 +388,7 @@
 				onclick={clearAllFilters}
 			>
 				<XIcon class="mr-1 size-3" />
-				Clear all
+				{L.qbClearAll}
 			</Button>
 		{/if}
 	</div>
@@ -409,8 +412,8 @@
 						</div>
 
 						<div>
-							<CardTitle class="text-lg">{title}</CardTitle>
-							<p class="text-sm text-muted-foreground">{description}</p>
+							<CardTitle class="text-lg">{title ?? L.qbTitle}</CardTitle>
+							<p class="text-sm text-muted-foreground">{description ?? L.qbDescription}</p>
 						</div>
 					</div>
 
@@ -430,7 +433,7 @@
 								onclick={clearAllFilters}
 							>
 								<XIcon class="mr-1 size-3" />
-								Clear all
+								{L.qbClearAll}
 							</Button>
 						{/if}
 
@@ -443,7 +446,7 @@
 								onclick={() => (open = false)}
 							>
 								<XIcon class="size-3.5" />
-								Hide
+								{L.qbHide}
 							</Button>
 						{/if}
 					</div>
@@ -461,14 +464,14 @@
 								class="flex items-center gap-2 text-sm font-medium text-foreground"
 							>
 								<Search class="size-3.5 text-muted-foreground" />
-								Search
+								{L.qbSearch}
 							</Label>
 
 							<form onsubmit={handleSearchSubmit}>
 								<Input
 									id="query-search"
 									type="search"
-									placeholder={searchPlaceholder}
+									placeholder={searchPlaceholder ?? L.qbSearchRows}
 									bind:value={search}
 									oninput={handleSearchInput}
 									class="w-full"
@@ -484,18 +487,18 @@
 								class="flex items-center gap-2 text-sm font-medium text-foreground"
 							>
 								<List class="size-3.5 text-muted-foreground" />
-								Page Size
+								{L.qbPageSize}
 							</Label>
 
 							<Select type="single" value={String(pageSize)} onValueChange={handlePageSizeChange}>
 								<SelectTrigger id="query-page-size" class="w-full">
-									{pageSize} per page
+									{L.qbPerPage(pageSize)}
 								</SelectTrigger>
 
 								<SelectContent>
 									{#each pageSizes as count (count)}
 										<SelectItem value={String(count)}>
-											{count} per page
+											{L.qbPerPage(count)}
 										</SelectItem>
 									{/each}
 								</SelectContent>
@@ -507,7 +510,7 @@
 						<div class="flex flex-col gap-2 sm:col-span-2 lg:col-span-2">
 							<Label class="flex items-center gap-2 text-sm font-medium text-foreground">
 								<Calendar1 class="size-3.5 text-muted-foreground" />
-								Date Range
+								{L.qbDateRange}
 							</Label>
 
 							<DateMonth
@@ -524,7 +527,7 @@
 					{:else if hasCustomFilters}
 						<div class="flex items-center gap-2 text-sm text-muted-foreground">
 							<SlidersHorizontal class="size-3.5" />
-							Custom filters configured, but no filter UI provided.
+							{L.qbNoFilterUi}
 						</div>
 					{/if}
 				</div>

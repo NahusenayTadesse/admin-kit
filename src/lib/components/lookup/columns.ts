@@ -1,3 +1,4 @@
+import { englishLabels, type KitLabels } from '$lib/labels';
 import type { ColumnDef, HeaderContext } from '@tanstack/table-core';
 import type { SuperValidated } from 'sveltekit-superforms';
 import { renderComponent } from '$lib/components/ui/data-table/index.js';
@@ -17,8 +18,10 @@ export type LookupForm = SuperValidated<Record<string, unknown>>;
 export type LookupSchema = Parameters<typeof createForm>[1];
 
 /** A boolean cell reads as a status badge, in the field's own wording. */
-function badgeText(field: LookupField, value: unknown): string {
-	return value ? (field.trueLabel ?? 'Active') : (field.falseLabel ?? 'Inactive');
+function badgeText(field: LookupField, value: unknown, labels: KitLabels): string {
+	return value
+		? (field.trueLabel ?? labels.lookupActive)
+		: (field.falseLabel ?? labels.lookupInactive);
 }
 
 function sortableHeader(label: string) {
@@ -45,7 +48,8 @@ export function lookupColumns(
 		options,
 		actions = { edit: '?/edit', delete: '?/delete' },
 		editSchema,
-		readonly = false
+		readonly = false,
+		labels = englishLabels
 	}: {
 		editForm: LookupForm;
 		canDelete?: boolean;
@@ -61,6 +65,8 @@ export function lookupColumns(
 		editSchema?: LookupSchema;
 		/** No edit or delete controls, and the label column is plain text. */
 		readonly?: boolean;
+		/** The words for the Edit column and yes/no badges; the component passes `useLabels()`. */
+		labels?: KitLabels;
 	}
 ): ColumnDef<LookupRow>[] {
 	const [labelField, ...rest] = config.fields;
@@ -177,7 +183,7 @@ export function lookupColumns(
 						? {
 								cell: ({ row }) =>
 									renderComponent(Statuses, {
-										status: badgeText(field, row.original[field.name])
+										status: badgeText(field, row.original[field.name], labels)
 									})
 							}
 						: {})
@@ -192,7 +198,7 @@ export function lookupColumns(
 	function actionColumns(): ColumnDef<LookupRow>[] {
 		const edit: ColumnDef<LookupRow> = {
 			id: 'edit',
-			header: 'Edit',
+			header: labels.lookupEdit,
 			enableSorting: false,
 			cell: ({ row }) => editDialog(row.original, true)
 		};

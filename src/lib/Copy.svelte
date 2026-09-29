@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import { Copy, CopyCheck } from '@lucide/svelte';
 
+	const L = useLabels();
 	let message = $state('');
 	let copied = $state(false);
 
@@ -9,7 +11,7 @@
 	async function copyPhoneNumber(copiedText: string) {
 		try {
 			await navigator.clipboard.writeText(copiedText);
-			message = 'Copied!';
+			message = L.copied;
 			copied = true;
 
 			setTimeout(() => {
@@ -17,7 +19,7 @@
 				copied = false;
 			}, 2000);
 		} catch (err) {
-			message = 'Failed to copy!';
+			message = L.copyFailed;
 			copied = false;
 			console.error(err);
 
@@ -36,7 +38,7 @@
 <button
 	type="button"
 	onclick={() => copyPhoneNumber(data)}
-	title="Copy {data}"
+	title={L.copy(String(data))}
 	onmouseenter={() => (visible = true)}
 	onmouseleave={() => (visible = false)}
 >

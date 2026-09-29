@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { selectItem, type Item } from '$lib/global';
 
@@ -21,11 +22,12 @@
 		placeholder = undefined,
 		onValueChange = undefined
 	} = $props();
+	const L = useLabels();
 	const triggerContent = $derived(
 		// Use String coercion to ensure "1" matches 1
 		items.find((f: Item) => String(f.value) === String(value))?.name ??
 			placeholder ??
-			'Select ' + (label ?? name.replace(/([a-z])([A-Z])/g, '$1 $2'))
+			L.select(label ?? name.replace(/([a-z])([A-Z])/g, '$1 $2'))
 	);
 </script>
 

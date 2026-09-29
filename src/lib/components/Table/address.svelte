@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { useLabels } from '$lib/labels';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import { MapPinIcon, MapIcon, LandmarkIcon, House, Building, Building2 } from '@lucide/svelte';
 
@@ -36,35 +37,36 @@
 	 * so an address with a subcity and a street still listed Kebele, Building, Floor and House
 	 * Number with nothing under them. One list, and it is the one on screen.
 	 */
+	const L = useLabels();
 	const addressFields = $derived(
 		[
 			{
-				label: 'Subcity',
+				label: L.addressSubcity,
 				value: subcity,
 				icon: MapIcon
 			},
 			{
-				label: 'Street',
+				label: L.addressStreet,
 				value: street,
 				icon: LandmarkIcon
 			},
 			{
-				label: 'Kebele',
+				label: L.addressKebele,
 				value: kebele,
 				icon: House
 			},
 			{
-				label: 'Building Number',
+				label: L.addressBuilding,
 				value: buildingNumber,
 				icon: Building
 			},
 			{
-				label: 'Floor',
+				label: L.addressFloor,
 				value: floor,
 				icon: Building2
 			},
 			{
-				label: 'House Number or Office Number',
+				label: L.addressHouse,
 				value: houseNumber,
 				icon: House
 			}
@@ -82,7 +84,7 @@
 >
 	{#if hasAddress}
 		<div class="space-y-3">
-			<h4 class="text-sm font-semibold">Address Details</h4>
+			<h4 class="text-sm font-semibold">{L.addressDetails}</h4>
 			<div class="flex flex-col gap-2">
 				{#each addressFields as item, index (item.label)}
 					<div class="relative flex items-start gap-3">
@@ -107,7 +109,7 @@
 		</div>
 
 		<iframe
-			title="Google Map"
+			title={L.addressMap}
 			width="100%"
 			height="400"
 			frameborder="0"
@@ -117,6 +119,6 @@
 			src={mapSrc}
 		></iframe>
 	{:else}
-		<div class="text-sm text-muted-foreground">No address information available</div>
+		<div class="text-sm text-muted-foreground">{L.addressNone}</div>
 	{/if}
 </DialogComp>
