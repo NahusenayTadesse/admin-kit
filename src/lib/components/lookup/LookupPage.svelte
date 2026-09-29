@@ -23,7 +23,8 @@
 	let {
 		data,
 		config,
-		schemas
+		schemas,
+		tabTitle = true
 	}: {
 		/**
 		 * The route's load: `addForm`, `editForm`, `rows`, `isSuperAdmin` from the layout, and one
@@ -41,6 +42,8 @@
 		 * only because the server validates regardless; a new screen should pass them.
 		 */
 		schemas?: { add?: LookupSchema; edit?: LookupSchema };
+		/** Set the browser tab to the list's name. Off when the page has its own `PageHeader`. */
+		tabTitle?: boolean;
 	} = $props();
 
 	let open = $state(false);
@@ -82,7 +85,7 @@
 </script>
 
 <svelte:head>
-	<title>{config.plural}</title>
+	{#if tabTitle}<title>{config.plural}</title>{/if}
 </svelte:head>
 
 {#if !config.fixedRows}

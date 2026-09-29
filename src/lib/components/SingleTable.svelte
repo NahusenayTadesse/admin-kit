@@ -22,11 +22,20 @@
 		 * callers that do not say.
 		 */
 		kind?: 'phone' | 'status';
+		/** A status row: what the badge says, in the viewer's language; `value` picks its colour. */
+		label?: string;
 	};
 
 	// The markup below iterates this, so it has always been a list of rows —
 	// the old `SingleTable` (singular) annotation made every caller fail to typecheck.
-	let { singleTable }: { singleTable: SingleTableRow[] } = $props();
+	let {
+		singleTable,
+		capitalize = false
+	}: {
+		singleTable: SingleTableRow[];
+		/** Capitalise values. Off: it turned email addresses and codes into wrong ones. */
+		capitalize?: boolean;
+	} = $props();
 
 	const L = useLabels();
 </script>
@@ -53,11 +62,11 @@
 			{#each singleTable as value, i (i)}
 				<tr>
 					<td class="px-4 py-3 font-semibold">{value.name}</td>
-					<td class="break-words capitalize">
+					<td class="break-words {capitalize ? 'capitalize' : ''}">
 						{#if value.kind === 'phone' || (!value.kind && value.name === 'Phone')}
 							<Copy data={String(value.value ?? '')} />
 						{:else if value.kind === 'status' || (!value.kind && value.name === 'Status')}
-							<Statuses status={String(value.value)} />
+							<Statuses status={String(value.value)} label={value.label} />
 						{:else if value.long}
 							<BigText
 								text={value.value}

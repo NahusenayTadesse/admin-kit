@@ -388,3 +388,25 @@ describe('DataTable variants', () => {
 		await expect.element(page.getByRole('searchbox')).toBeInTheDocument();
 	});
 });
+
+describe('DataTable columns and rows', () => {
+	it('aligns a column from its meta, and styles a row from its data', async () => {
+		const aligned: ColumnDef<Row, unknown>[] = [
+			{ accessorKey: 'name', header: 'Name' },
+			{ accessorKey: 'amount', header: 'Amount', meta: { align: 'right' } }
+		];
+		render(DataTable<Row, unknown>, {
+			data: rows,
+			columns: aligned,
+			search: false,
+			rowClass: (row: Row) => (row.amount > 250 ? 'bg-amber-50' : undefined)
+		});
+
+		await expect.element(page.getByText('Alice')).toBeInTheDocument();
+		const alice = page.getByText('Alice').element().closest('tr')!;
+		const bob = page.getByText('Bob').element().closest('tr')!;
+		expect(alice.className).toContain('bg-amber-50');
+		expect(bob.className).not.toContain('bg-amber-50');
+		expect(alice.querySelectorAll('td')[1].className).toContain('text-right');
+	});
+});

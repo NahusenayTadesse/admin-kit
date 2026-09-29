@@ -141,6 +141,11 @@
 		 * whose cells are inputs, which a form submits only if they are all in the page.
 		 */
 		paginate?: boolean;
+		/**
+		 * Classes for a row, from its data: a tint for a row that needs attention (a count that is
+		 * off, a lot that expired).
+		 */
+		rowClass?: (row: TData) => string | null | undefined;
 	};
 
 	let {
@@ -160,8 +165,16 @@
 		charts = false,
 		server,
 		dateFilter,
-		paginate = undefined
+		paginate = undefined,
+		rowClass = undefined
 	}: Props = $props();
+
+	/** A column's alignment (`meta: { align: 'right' }` for amounts and quantities). */
+	const ALIGN = { left: 'text-left', center: 'text-center', right: 'text-right' } as const;
+	const alignOf = (meta: unknown) => {
+		const align = (meta as { align?: keyof typeof ALIGN } | undefined)?.align;
+		return align ? ALIGN[align] : '';
+	};
 
 	const VARIANTS = {
 		list: { search: true, paginate: true, height: '80vh', pageSize: 20 },
@@ -514,9 +527,17 @@
 						{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
 							<Table.Row>
 								{#each headerGroup.headers as header (header.id)}
-									<Table.Head colspan={header.colSpan}>
+									<Table.Head
+										colspan={header.colSpan}
+										class={alignOf(header.column.columnDef.meta)}
+									>
 										{#if !header.isPlaceholder}
-											<div class="flex items-center gap-1">
+											<div
+												class="flex items-center gap-1 {alignOf(header.column.columnDef.meta) ===
+												'text-right'
+													? 'justify-end'
+													: ''}"
+											>
 												<FlexRender
 													content={header.column.columnDef.header}
 													context={header.getContext()}
@@ -543,9 +564,12 @@
 
 					<Table.Body>
 						{#each table.getRowModel().rows as row (row.id)}
-							<Table.Row data-state={row.getIsSelected() && 'selected'}>
+							<Table.Row
+								data-state={row.getIsSelected() && 'selected'}
+								class={rowClass?.(row.original) ?? ''}
+							>
 								{#each row.getVisibleCells() as cell (cell.id)}
-									<Table.Cell>
+									<Table.Cell class={alignOf(cell.column.columnDef.meta)}>
 										<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
 									</Table.Cell>
 								{/each}
@@ -566,7 +590,10 @@
 							{#each table.getFooterGroups() as footerGroup (footerGroup.id)}
 								<Table.Row>
 									{#each footerGroup.headers as footer (footer.id)}
-										<Table.Cell colspan={footer.colSpan}>
+										<Table.Cell
+											colspan={footer.colSpan}
+											class={alignOf(footer.column.columnDef.meta)}
+										>
 											{#if !footer.isPlaceholder}
 												<FlexRender
 													content={footer.column.columnDef.footer}

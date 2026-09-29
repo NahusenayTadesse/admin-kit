@@ -21,6 +21,7 @@
 		description = undefined,
 		confirmLabel = undefined,
 		busyLabel = undefined,
+		cancelLabel = undefined,
 		icon: Icon = undefined,
 		variant = 'default',
 		disabled = false,
@@ -38,6 +39,8 @@
 		confirmLabel?: string;
 		/** While it runs. Defaults to the confirm label. */
 		busyLabel?: string;
+		/** On the button that backs out ("Not yet"). Defaults to the kit's "Cancel". */
+		cancelLabel?: string;
 		icon?: Component<IconProps>;
 		variant?: ButtonVariant;
 		disabled?: boolean;
@@ -61,7 +64,7 @@
 			{#if description}<AlertDialog.Description>{description}</AlertDialog.Description>{/if}
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>{L.cancel}</AlertDialog.Cancel>
+			<AlertDialog.Cancel>{cancelLabel ?? L.cancel}</AlertDialog.Cancel>
 			<form
 				method="POST"
 				{action}
