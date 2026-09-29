@@ -72,6 +72,12 @@ export type LookupField = {
 	/** Rows for a `textarea`. */
 	rows?: number;
 	/**
+	 * The table cell shows the value with `BigText`: its first characters and a "…" that opens the
+	 * rest. Always so for a `textarea`; set it on a `text` field that can run long (a description,
+	 * an address). A number is how many characters to show; `true`, BigText's default.
+	 */
+	long?: boolean | number;
+	/**
 	 * Badge and dropdown wording for `boolean` and `checkbox` fields. `Statuses` already knows
 	 * active/inactive, removable/unremovable and calculated/not calculated, so those render in
 	 * colour; anything else falls back to grey, which is what these pages did before.

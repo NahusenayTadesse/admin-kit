@@ -5,6 +5,7 @@ import { renderComponent } from '$lib/components/ui/data-table/index.js';
 
 import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
 import Statuses from '$lib/components/Table/statuses.svelte';
+import BigText from '$lib/components/Table/bigText.svelte';
 import DeleteEntity from '$lib/components/DeleteEntity.svelte';
 import LookupEdit from './LookupEdit.svelte';
 import { formatETB, formatEthiopianDate } from '$lib/global';
@@ -162,6 +163,20 @@ export function lookupColumns(
 								? ''
 								: formatETB(Number(value));
 						}
+					};
+				}
+
+				// Free text of any length: the start of it, and a "…" that opens the rest, so one long
+				// note cannot stretch the table.
+				if (field.type === 'textarea' || field.long) {
+					return {
+						accessorKey: field.name,
+						header: field.label,
+						cell: ({ row }) =>
+							renderComponent(BigText, {
+								text: row.original[field.name] as string | null,
+								max: typeof field.long === 'number' ? field.long : undefined
+							})
 					};
 				}
 

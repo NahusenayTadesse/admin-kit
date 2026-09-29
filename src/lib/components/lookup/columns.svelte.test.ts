@@ -77,3 +77,29 @@ describe('lookupColumns', () => {
 		expect(k.indexOf('custom')).toBeLessThan(k.indexOf('edit'));
 	});
 });
+
+describe('long text', () => {
+	const cellOf = (c: LookupConfig, key: string, row: Record<string, unknown>) => {
+		const col = lookupColumns(c, { editForm: form }).find(
+			(x) => ('accessorKey' in x ? x.accessorKey : x.id) === key
+		)!;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return (col.cell as any)({ row: { original: row } });
+	};
+
+	it('shows a textarea, or a field marked long, with BigText at the length asked for', () => {
+		const c: LookupConfig = {
+			entity: 'Lot',
+			plural: 'Lots',
+			fields: [
+				{ name: 'name', label: 'Name', type: 'text' },
+				{ name: 'note', label: 'Note', type: 'textarea' },
+				{ name: 'address', label: 'Address', type: 'text', long: 30 }
+			]
+		};
+		const note = cellOf(c, 'note', { note: 'Rain came through the roof' });
+		expect(note.props).toEqual({ text: 'Rain came through the roof', max: undefined });
+		const address = cellOf(c, 'address', { address: 'Bole Road' });
+		expect(address.props).toEqual({ text: 'Bole Road', max: 30 });
+	});
+});

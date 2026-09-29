@@ -3,6 +3,7 @@
 	import Copy from '$lib/Copy.svelte';
 	import { LoaderCircle } from '@lucide/svelte';
 	import Statuses from './Table/statuses.svelte';
+	import BigText from './Table/bigText.svelte';
 	// import JSPDF from "$lib/JSPDF.svelte"
 
 	type SingleTableRow = {
@@ -10,6 +11,11 @@
 		value: string | number | null | undefined;
 		/** Optional destination — the value renders as a link when set. */
 		href?: string | null;
+		/**
+		 * Free text of any length (a note, an address): shown with `BigText`, cut after its default
+		 * 15 characters (`true`) or after this many, with a "…" that opens the rest.
+		 */
+		long?: boolean | number;
 	};
 
 	// The markup below iterates this, so it has always been a list of rows —
@@ -38,7 +44,7 @@
 			</tr>
 		</thead>
 		<tbody class="text-gray-900 dark:text-gray-100">
-			{#each singleTable as value}
+			{#each singleTable as value, i (i)}
 				<tr>
 					<td class="px-4 py-3 font-semibold">{value.name}</td>
 					<td class="break-words capitalize">
@@ -46,6 +52,11 @@
 							<Copy data={String(value.value ?? '')} />
 						{:else if value.name === 'Status'}
 							<Statuses status={String(value.value)} />
+						{:else if value.long}
+							<BigText
+								text={value.value}
+								max={typeof value.long === 'number' ? value.long : undefined}
+							/>
 						{:else if value.href}
 							<a class="underline underline-offset-2 hover:no-underline" href={value.href}>
 								{value.value}
