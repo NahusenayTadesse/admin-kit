@@ -327,3 +327,64 @@ describe('data-table.svelte', () => {
 		await expect.element(page.getByText('Export to CSV')).toBeInTheDocument();
 	});
 });
+
+describe('DataTable for sheets', () => {
+	it('shows every row, and no pager, when paging is off', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns, paginate: false, search: false });
+
+		await expect.element(page.getByText('Row 1', { exact: true })).toBeInTheDocument();
+		await expect.element(page.getByText('Row 25', { exact: true })).toBeInTheDocument();
+		expect(document.querySelectorAll('tbody tr')).toHaveLength(25);
+	});
+
+	it('draws a footer row from the columns that declare one', async () => {
+		const withTotal: ColumnDef<Row, unknown>[] = [
+			{ accessorKey: 'name', header: 'Name', footer: 'Total' },
+			{
+				accessorKey: 'amount',
+				header: 'Amount',
+				footer: ({ table }) =>
+					String(table.getCoreRowModel().rows.reduce((s, r) => s + r.original.amount, 0))
+			}
+		];
+		render(DataTable<Row, unknown>, { data: rows, columns: withTotal, search: false });
+
+		const footer = document.querySelector('tfoot')!;
+		expect(footer.textContent).toContain('Total');
+		expect(footer.textContent).toContain('600');
+	});
+
+	it('draws no footer when no column has one', async () => {
+		render(DataTable<Row, unknown>, { data: rows, columns, search: false });
+
+		await expect.element(page.getByText('Alice')).toBeInTheDocument();
+		expect(document.querySelector('tfoot')).toBeNull();
+	});
+});
+
+describe('DataTable variants', () => {
+	it('list: search, and pages of 20', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns });
+		await expect.element(page.getByRole('searchbox')).toBeInTheDocument();
+		expect(document.querySelectorAll('tbody tr')).toHaveLength(20);
+	});
+
+	it('compact: no toolbar, pages of 10', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns, variant: 'compact' });
+		await expect.element(page.getByText('Row 1', { exact: true })).toBeInTheDocument();
+		expect(document.querySelector('input[type=search]')).toBeNull();
+		expect(document.querySelectorAll('tbody tr')).toHaveLength(10);
+	});
+
+	it('sheet: no toolbar and every row, for inputs a form must submit', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns, variant: 'sheet' });
+		await expect.element(page.getByText('Row 25', { exact: true })).toBeInTheDocument();
+		expect(document.querySelector('input[type=search]')).toBeNull();
+		expect(document.querySelectorAll('tbody tr')).toHaveLength(25);
+	});
+
+	it('lets a prop override the variant', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns, variant: 'compact', search: true });
+		await expect.element(page.getByRole('searchbox')).toBeInTheDocument();
+	});
+});

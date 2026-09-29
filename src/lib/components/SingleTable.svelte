@@ -16,6 +16,12 @@
 		 * 15 characters (`true`) or after this many, with a "…" that opens the rest.
 		 */
 		long?: boolean | number;
+		/**
+		 * How to show the value: a phone number with a copy button, a status badge. Say it here —
+		 * matching the row's *name* ("Phone", "Status") only works in English, and is kept only for
+		 * callers that do not say.
+		 */
+		kind?: 'phone' | 'status';
 	};
 
 	// The markup below iterates this, so it has always been a list of rows —
@@ -48,9 +54,9 @@
 				<tr>
 					<td class="px-4 py-3 font-semibold">{value.name}</td>
 					<td class="break-words capitalize">
-						{#if value.name === 'Phone'}
+						{#if value.kind === 'phone' || (!value.kind && value.name === 'Phone')}
 							<Copy data={String(value.value ?? '')} />
-						{:else if value.name === 'Status'}
+						{:else if value.kind === 'status' || (!value.kind && value.name === 'Status')}
 							<Statuses status={String(value.value)} />
 						{:else if value.long}
 							<BigText

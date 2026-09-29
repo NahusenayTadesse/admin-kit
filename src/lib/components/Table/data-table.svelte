@@ -75,6 +75,18 @@
 	type Props = {
 		columns: ColumnDef<TData, TValue>[];
 		data: TData[];
+		/**
+		 * What kind of table this is, which sets the defaults below:
+		 *
+		 * - `list` — a page's main list: search, columns and export, pages, and most of the screen.
+		 * - `compact` — a table inside a page (a document's lines, a customer's recent sales): no
+		 *   toolbar, pages of 10, as tall as its rows.
+		 * - `sheet` — rows to fill in, inside a form (quantities received, counted, returned): no
+		 *   toolbar and no pages, so every input is on screen and submitted.
+		 *
+		 * `search`, `paginate`, `height` and `defaultPageSize` still override it.
+		 */
+		variant?: 'list' | 'compact' | 'sheet';
 		search?: boolean;
 		class?: string;
 		fileName?: string;
@@ -124,25 +136,42 @@
 		 * mode only: it writes `dateStart`/`dateEnd`, which the load applies to its `dateColumn`.
 		 */
 		dateFilter?: string;
+		/**
+		 * Page the rows (the default). Off, every row is on screen and there is no pager: for a sheet
+		 * whose cells are inputs, which a form submits only if they are all in the page.
+		 */
+		paginate?: boolean;
 	};
 
 	let {
 		data,
 		columns,
-		search = true,
+		variant = 'list',
+		search = undefined,
 		class: className = '',
 		fileName = 'File',
 		selected = $bindable(),
-		defaultPageSize = 20,
-		height = '80vh',
+		defaultPageSize = undefined,
+		height = undefined,
 		pageSizes = [10, 20, 50, 100],
 		facetKeys = [],
 		facetLabels = {},
 		facetParams = {},
 		charts = false,
 		server,
-		dateFilter
+		dateFilter,
+		paginate = undefined
 	}: Props = $props();
+
+	const VARIANTS = {
+		list: { search: true, paginate: true, height: '80vh', pageSize: 20 },
+		compact: { search: false, paginate: true, height: 'auto', pageSize: 10 },
+		sheet: { search: false, paginate: false, height: 'auto', pageSize: 20 }
+	} as const;
+	const showSearch = $derived(search ?? VARIANTS[variant].search);
+	const pages = $derived(paginate ?? VARIANTS[variant].paginate);
+	const frameHeight = $derived(height ?? VARIANTS[variant].height);
+	const startPageSize = $derived(defaultPageSize ?? VARIANTS[variant].pageSize);
 
 	const isServer = $derived(Boolean(server));
 
@@ -229,7 +258,7 @@
 
 	const pagination = $derived<PaginationState>({
 		pageIndex,
-		pageSize: chosenPageSize ?? defaultPageSize
+		pageSize: chosenPageSize ?? startPageSize
 	});
 	/*
 	 * Client mode sorts in memory. Server mode reflects what the URL asked for, because the rows
@@ -272,8 +301,15 @@
 	 * letting TanStack slice it again would show the first N rows of page three.
 	 */
 	const tanstackPagination = $derived<PaginationState>(
-		server ? { pageIndex: 0, pageSize: Math.max(1, server.pagination.pageSize) } : pagination
+		server
+			? { pageIndex: 0, pageSize: Math.max(1, server.pagination.pageSize) }
+			: pages
+				? pagination
+				: { pageIndex: 0, pageSize: Math.max(1, rows.length) }
 	);
+
+	/** Totals and the like: a footer row, drawn only when a column declares one. */
+	const hasFooter = $derived(columns.some((column) => column.footer !== undefined));
 
 	const table = createSvelteTable({
 		get data() {
@@ -376,14 +412,14 @@
 	const L = useLabels();
 </script>
 
-<div class="mt-4 w-full {className}" style="height: {height}" data-testid="table-frame">
+<div class="mt-4 w-full {className}" style="height: {frameHeight}" data-testid="table-frame">
 	<!--
 		`min-h-0` on every flex child that scrolls: a flex item's default `min-height: auto` refuses
 		to shrink below its content, so without it the rows push the container past the declared
 		height and the page scrolls instead of the table.
 	-->
 	<div class="flex h-full min-h-0 flex-col gap-2 p-2">
-		{#if search}
+		{#if showSearch}
 			<ScrollArea orientation="horizontal" class="shrink-0 rounded-md border">
 				<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
 					<Input
@@ -525,17 +561,37 @@
 							</Table.Row>
 						{/each}
 					</Table.Body>
+					{#if hasFooter}
+						<Table.Footer class="sticky bottom-0 bg-muted/60 font-medium">
+							{#each table.getFooterGroups() as footerGroup (footerGroup.id)}
+								<Table.Row>
+									{#each footerGroup.headers as footer (footer.id)}
+										<Table.Cell colspan={footer.colSpan}>
+											{#if !footer.isPlaceholder}
+												<FlexRender
+													content={footer.column.columnDef.footer}
+													context={footer.getContext()}
+												/>
+											{/if}
+										</Table.Cell>
+									{/each}
+								</Table.Row>
+							{/each}
+						</Table.Footer>
+					{/if}
 				</Table.Root>
 			</div>
 
-			<TablePagination
-				page={pagerPage}
-				pageSize={pagerSize}
-				total={pagerTotal}
-				{pageSizes}
-				onPage={goToPage}
-				onPageSize={changePageSize}
-			/>
+			{#if pages || server}
+				<TablePagination
+					page={pagerPage}
+					pageSize={pagerSize}
+					total={pagerTotal}
+					{pageSizes}
+					onPage={goToPage}
+					onPageSize={changePageSize}
+				/>
+			{/if}
 		</div>
 	</div>
 </div>
