@@ -1,0 +1,39 @@
+<script lang="ts">
+	import * as Command from '$lib/components/ui/command/index.js';
+	import Disc from '@lucide/svelte/icons/disc';
+	import SearchIcon from '@lucide/svelte/icons/search';
+	import DialogComp from '$lib/formComponents/DialogComp.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { searchEntries } from '$lib/navigation';
+	import { useKit } from '$lib/context';
+
+	const kit = useKit();
+
+	let isOpen = $state(false);
+
+	// The sidebar's own list, flattened, so the palette cannot offer a page the menu does not
+	// know about — or one this viewer would be refused.
+	let list = $derived(searchEntries(kit.navigation, kit.canOpen, kit.searchExtra));
+</script>
+
+<DialogComp title="Search the Whole Site" variant="ghost" bind:open={isOpen}>
+	{#snippet trigger(props)}
+		<Button size="sm" variant="ghost" class="w-auto px-4" title="Search for Pages" {...props}>
+			<SearchIcon />
+		</Button>
+	{/snippet}
+	<Command.Root class="rounded-lg shadow-md md:min-w-112.5">
+		<Command.Input placeholder="Type a command or search..." type="search" />
+		<Command.List>
+			<Command.Empty>No results found.</Command.Empty>
+			<Command.Group heading="Suggestions">
+				{#each list as item (item.url)}
+					<Command.Item>
+						<Disc />
+						<a href={item.url} onclick={() => (isOpen = false)}>{item.label}</a>
+					</Command.Item>
+				{/each}
+			</Command.Group>
+		</Command.List>
+	</Command.Root>
+</DialogComp>
