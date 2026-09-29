@@ -24,6 +24,11 @@ const columns: ColumnDef<Row, unknown>[] = [
 	}
 ];
 
+const plain: ColumnDef<Row, unknown>[] = [
+	{ accessorKey: 'name', header: 'Name' },
+	{ accessorKey: 'amount', header: 'Amount', meta: { align: 'right', class: 'w-32' } }
+];
+
 // More rows than the default page size, so paging is real rather than theoretical.
 const manyRows: Row[] = Array.from({ length: 25 }, (_, i) => ({
 	id: i + 1,
@@ -383,6 +388,15 @@ describe('DataTable variants', () => {
 		expect(document.querySelectorAll('tbody tr')).toHaveLength(25);
 	});
 
+	it('print: every row as plain ruled lines, with no frame, toolbar or pager', async () => {
+		render(DataTable<Row, unknown>, { data: manyRows, columns: plain, variant: 'print' });
+		await expect.element(page.getByText('Row 25', { exact: true })).toBeInTheDocument();
+		expect(document.querySelector('[data-testid=print-table]')).not.toBeNull();
+		expect(document.querySelector('[data-testid=table-frame]')).toBeNull();
+		expect(document.querySelector('input[type=search]')).toBeNull();
+		expect(document.querySelectorAll('tbody tr')).toHaveLength(25);
+	});
+
 	it('lets a prop override the variant', async () => {
 		render(DataTable<Row, unknown>, { data: manyRows, columns, variant: 'compact', search: true });
 		await expect.element(page.getByRole('searchbox')).toBeInTheDocument();
@@ -408,5 +422,44 @@ describe('DataTable columns and rows', () => {
 		expect(alice.className).toContain('bg-amber-50');
 		expect(bob.className).not.toContain('bg-amber-50');
 		expect(alice.querySelectorAll('td')[1].className).toContain('text-right');
+	});
+
+	it("adds a column's own classes from its meta", async () => {
+		render(DataTable<Row, unknown>, { data: rows, columns: plain, variant: 'print' });
+		await expect.element(page.getByText('Alice')).toBeInTheDocument();
+		const cell = page.getByText('Alice').element().closest('tr')!.querySelectorAll('td')[1];
+		expect(cell.className).toContain('text-right');
+		expect(cell.className).toContain('w-32');
+	});
+
+	it('writes summary lines under the rows, labelled across all but the last column', async () => {
+		for (const variant of ['compact', 'print'] as const) {
+			const { unmount } = render(DataTable<Row, unknown>, {
+				data: rows,
+				columns: plain,
+				variant,
+				summary: [
+					{ label: 'Before tax', value: '600.00' },
+					{ label: 'Total', value: '690.00', strong: true }
+				]
+			});
+			await expect.element(page.getByText('690.00')).toBeInTheDocument();
+			const lines = document.querySelectorAll('tfoot tr');
+			expect(lines).toHaveLength(2);
+			expect(lines[0].querySelectorAll('td')).toHaveLength(2);
+			expect(lines[0].textContent).toContain('Before tax');
+			expect(lines[1].className).toContain('font-bold');
+			unmount();
+		}
+	});
+
+	it('leaves the header row to screen readers when no column has a header, on paper', async () => {
+		const headless: ColumnDef<Row, unknown>[] = [
+			{ accessorKey: 'name' },
+			{ accessorKey: 'amount' }
+		];
+		render(DataTable<Row, unknown>, { data: rows, columns: headless, variant: 'print' });
+		await expect.element(page.getByText('Alice')).toBeInTheDocument();
+		expect(document.querySelector('thead')!.className).toContain('sr-only');
 	});
 });

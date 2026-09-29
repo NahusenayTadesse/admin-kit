@@ -83,10 +83,12 @@
 		 *   toolbar, pages of 10, as tall as its rows.
 		 * - `sheet` — rows to fill in, inside a form (quantities received, counted, returned): no
 		 *   toolbar and no pages, so every input is on screen and submitted.
+		 * - `print` — a paper document's lines (an invoice, a voucher, a count sheet): every row, as
+		 *   plain ruled lines in the page's own ink, with no frame, toolbar, scrolling or sorting.
 		 *
 		 * `search`, `paginate`, `height` and `defaultPageSize` still override it.
 		 */
-		variant?: 'list' | 'compact' | 'sheet';
+		variant?: 'list' | 'compact' | 'sheet' | 'print';
 		search?: boolean;
 		class?: string;
 		fileName?: string;
@@ -146,6 +148,12 @@
 		 * off, a lot that expired).
 		 */
 		rowClass?: (row: TData) => string | null | undefined;
+		/**
+		 * Labelled figures under the rows — before tax, VAT, total — each a row of its own: the
+		 * label across every column but the last, the figure in the last. `strong` for the one that
+		 * matters (the total). For one figure per column, give the columns a `footer` instead.
+		 */
+		summary?: { label: string; value: string; strong?: boolean }[];
 	};
 
 	let {
@@ -166,20 +174,27 @@
 		server,
 		dateFilter,
 		paginate = undefined,
-		rowClass = undefined
+		rowClass = undefined,
+		summary = []
 	}: Props = $props();
 
-	/** A column's alignment (`meta: { align: 'right' }` for amounts and quantities). */
+	/**
+	 * A column's alignment (`meta: { align: 'right' }` for amounts and quantities), and any classes
+	 * of its own (`meta: { class: 'w-32' }`, a blank column wide enough to write in).
+	 */
 	const ALIGN = { left: 'text-left', center: 'text-center', right: 'text-right' } as const;
 	const alignOf = (meta: unknown) => {
 		const align = (meta as { align?: keyof typeof ALIGN } | undefined)?.align;
 		return align ? ALIGN[align] : '';
 	};
+	const classOf = (meta: unknown) =>
+		[alignOf(meta), (meta as { class?: string } | undefined)?.class ?? ''].join(' ').trim();
 
 	const VARIANTS = {
 		list: { search: true, paginate: true, height: '80vh', pageSize: 20 },
 		compact: { search: false, paginate: true, height: 'auto', pageSize: 10 },
-		sheet: { search: false, paginate: false, height: 'auto', pageSize: 20 }
+		sheet: { search: false, paginate: false, height: 'auto', pageSize: 20 },
+		print: { search: false, paginate: false, height: 'auto', pageSize: 20 }
 	} as const;
 	const showSearch = $derived(search ?? VARIANTS[variant].search);
 	const pages = $derived(paginate ?? VARIANTS[variant].paginate);
@@ -419,206 +434,298 @@
 		else table.setPageSize(size);
 	}
 
+	/**
+	 * On paper, a list whose cells say what they are ("Due 12 Tir") needs no header row; one
+	 * without a header on any column keeps it for screen readers only.
+	 */
+	const hasHeader = $derived(columns.some((column) => Boolean(column.header)));
+
+	/** How many columns are drawn: a summary's label spans all of them but the last. */
+	const columnCount = $derived(table.getVisibleLeafColumns().length);
+
 	const canChart = $derived(charts && facetKeys.length > 0);
 	let chartsOpen = $state(false);
 
 	const L = useLabels();
 </script>
 
-<div class="mt-4 w-full {className}" style="height: {frameHeight}" data-testid="table-frame">
-	<!--
+{#if variant === 'print'}
+	<table class="w-full border-collapse text-sm {className}" data-testid="print-table">
+		<thead class={hasHeader ? '' : 'sr-only'}>
+			{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+				<tr class="border-b-2 text-left">
+					{#each headerGroup.headers as header (header.id)}
+						<th
+							colspan={header.colSpan}
+							class="py-1 pr-2 last:pr-0 {classOf(header.column.columnDef.meta)}"
+						>
+							{#if !header.isPlaceholder}
+								<FlexRender
+									content={header.column.columnDef.header}
+									context={header.getContext()}
+								/>
+							{/if}
+						</th>
+					{/each}
+				</tr>
+			{/each}
+		</thead>
+		<tbody>
+			{#each table.getRowModel().rows as row (row.id)}
+				<tr class="border-b align-top {rowClass?.(row.original) ?? ''}">
+					{#each row.getVisibleCells() as cell (cell.id)}
+						<td class="py-1 pr-2 last:pr-0 {classOf(cell.column.columnDef.meta)}">
+							<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
+						</td>
+					{/each}
+				</tr>
+			{:else}
+				<tr class="border-b">
+					<td colspan={columnCount} class="py-2 text-center">{L.tableEmpty}</td>
+				</tr>
+			{/each}
+		</tbody>
+		{#if hasFooter || summary.length}
+			<tfoot>
+				{#each hasFooter ? table.getFooterGroups() : [] as footerGroup (footerGroup.id)}
+					<tr class="font-medium">
+						{#each footerGroup.headers as footer (footer.id)}
+							<td
+								colspan={footer.colSpan}
+								class="py-1 pr-2 last:pr-0 {classOf(footer.column.columnDef.meta)}"
+							>
+								{#if !footer.isPlaceholder}
+									<FlexRender
+										content={footer.column.columnDef.footer}
+										context={footer.getContext()}
+									/>
+								{/if}
+							</td>
+						{/each}
+					</tr>
+				{/each}
+				{#each summary as line, i (i)}
+					<tr class={line.strong ? 'text-base font-bold' : ''}>
+						{#if columnCount > 1}
+							<td colspan={columnCount - 1} class="py-1 pr-2 text-right">{line.label}</td>
+						{/if}
+						<td class="py-1 text-right">{line.value}</td>
+					</tr>
+				{/each}
+			</tfoot>
+		{/if}
+	</table>
+{:else}
+	<div class="mt-4 w-full {className}" style="height: {frameHeight}" data-testid="table-frame">
+		<!--
 		`min-h-0` on every flex child that scrolls: a flex item's default `min-height: auto` refuses
 		to shrink below its content, so without it the rows push the container past the declared
 		height and the page scrolls instead of the table.
 	-->
-	<div class="flex h-full min-h-0 flex-col gap-2 p-2">
-		{#if showSearch}
-			<ScrollArea orientation="horizontal" class="shrink-0 rounded-md border">
-				<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
-					<Input
-						type="search"
-						placeholder={isServer ? L.tableSearchServer : L.tableSearch}
-						class="w-64 lg:w-xl"
-						bind:value={
-							() => (isServer ? serverSearch : globalFilter),
-							(v: string) => (isServer ? (serverSearch = v) : (globalFilter = v))
-						}
-						oninput={(e) => onSearchInput(e.currentTarget.value)}
-					/>
-
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger>
-							{#snippet child({ props })}
-								<Button {...props} variant="outline" class="ml-auto">
-									{L.tableColumns}
-									<ChevronDownIcon class="size-5" />
-								</Button>
-							{/snippet}
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end">
-							{#each table.getAllColumns().filter((col) => col.getCanHide()) as column (column.id)}
-								<DropdownMenu.CheckboxItem
-									class="capitalize"
-									bind:checked={() => column.getIsVisible(), (v) => column.toggleVisibility(!!v)}
-								>
-									{typeof column.columnDef.header === 'string' && column.columnDef.header
-										? column.columnDef.header
-										: column.id.replace(/([a-z])([A-Z])/g, '$1 $2')}
-								</DropdownMenu.CheckboxItem>
-							{/each}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-
-					{#if activeFacetCount}
-						<Button variant="ghost" size="sm" class="gap-1" onclick={clearAllFacets}>
-							<RotateCcw class="size-4" />
-							{L.tableClear(activeFacetCount)}
-						</Button>
-					{/if}
-
-					{#if server && dateFilter}
-						<TableDateRange
-							label={dateFilter}
-							start={server.filters?.dateStart}
-							end={server.filters?.dateEnd}
+		<div class="flex h-full min-h-0 flex-col gap-2 p-2">
+			{#if showSearch}
+				<ScrollArea orientation="horizontal" class="shrink-0 rounded-md border">
+					<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
+						<Input
+							type="search"
+							placeholder={isServer ? L.tableSearchServer : L.tableSearch}
+							class="w-64 lg:w-xl"
+							bind:value={
+								() => (isServer ? serverSearch : globalFilter),
+								(v: string) => (isServer ? (serverSearch = v) : (globalFilter = v))
+							}
+							oninput={(e) => onSearchInput(e.currentTarget.value)}
 						/>
-					{/if}
 
-					<Pdf {fileName} {table} />
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger>
+								{#snippet child({ props })}
+									<Button {...props} variant="outline" class="ml-auto">
+										{L.tableColumns}
+										<ChevronDownIcon class="size-5" />
+									</Button>
+								{/snippet}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="end">
+								{#each table
+									.getAllColumns()
+									.filter((col) => col.getCanHide()) as column (column.id)}
+									<DropdownMenu.CheckboxItem
+										class="capitalize"
+										bind:checked={() => column.getIsVisible(), (v) => column.toggleVisibility(!!v)}
+									>
+										{typeof column.columnDef.header === 'string' && column.columnDef.header
+											? column.columnDef.header
+											: column.id.replace(/([a-z])([A-Z])/g, '$1 $2')}
+									</DropdownMenu.CheckboxItem>
+								{/each}
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
 
-					{#if canChart}
-						<Button
-							variant={chartsOpen ? 'default' : 'outline'}
-							aria-expanded={chartsOpen}
-							onclick={() => (chartsOpen = !chartsOpen)}
-						>
-							<ChartColumnBig />
-							{L.tableCharts}
+						{#if activeFacetCount}
+							<Button variant="ghost" size="sm" class="gap-1" onclick={clearAllFacets}>
+								<RotateCcw class="size-4" />
+								{L.tableClear(activeFacetCount)}
+							</Button>
+						{/if}
+
+						{#if server && dateFilter}
+							<TableDateRange
+								label={dateFilter}
+								start={server.filters?.dateStart}
+								end={server.filters?.dateEnd}
+							/>
+						{/if}
+
+						<Pdf {fileName} {table} />
+
+						{#if canChart}
+							<Button
+								variant={chartsOpen ? 'default' : 'outline'}
+								aria-expanded={chartsOpen}
+								onclick={() => (chartsOpen = !chartsOpen)}
+							>
+								<ChartColumnBig />
+								{L.tableCharts}
+							</Button>
+						{/if}
+
+						<Button variant="outline">
+							<ListOrdered />
+							{L.tableResults(pagerTotal.toLocaleString())}
 						</Button>
-					{/if}
-
-					<Button variant="outline">
-						<ListOrdered />
-						{L.tableResults(pagerTotal.toLocaleString())}
-					</Button>
-				</div>
-			</ScrollArea>
-		{/if}
-
-		<div class="flex min-h-0 flex-1 flex-col rounded-md border">
-			{#if canChart && chartsOpen}
-				<!-- Above the rows and below the toolbar: it pushes the table down rather than
-					     squeezing it sideways, so no column is hidden to make room for it. -->
-				<div class="h-64 shrink-0 border-b" transition:slide={{ duration: 150 }}>
-					<TableCharts
-						{facets}
-						labels={facetLabels}
-						selected={selectedFacets}
-						onToggle={toggleFacet}
-					/>
-				</div>
+					</div>
+				</ScrollArea>
 			{/if}
 
-			<div class="min-h-0 flex-1 overflow-auto">
-				<Table.Root class="relative">
-					<Table.Header
-						class="sticky top-0 z-10 bg-background shadow-[inset_0_-1px_0_var(--border)]"
-					>
-						{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
-							<Table.Row>
-								{#each headerGroup.headers as header (header.id)}
-									<Table.Head
-										colspan={header.colSpan}
-										class={alignOf(header.column.columnDef.meta)}
-									>
-										{#if !header.isPlaceholder}
-											<div
-												class="flex items-center gap-1 {alignOf(header.column.columnDef.meta) ===
-												'text-right'
-													? 'justify-end'
-													: ''}"
-											>
-												<FlexRender
-													content={header.column.columnDef.header}
-													context={header.getContext()}
-												/>
-												<!-- The filter belongs on the column it filters, not in a panel
-												     the reader has to look away from the data to open. -->
-												{#if facetKeys.includes(header.column.id)}
-													<TableFacet
-														label={facetLabels[header.column.id] ?? header.column.id}
-														facets={facets[header.column.id] ?? []}
-														selected={selectedFacets[header.column.id] ?? []}
-														multi={!isServer}
-														onToggle={(v) => toggleFacet(header.column.id, v)}
-														onClear={() => clearFacet(header.column.id)}
-													/>
-												{/if}
-											</div>
-										{/if}
-									</Table.Head>
-								{/each}
-							</Table.Row>
-						{/each}
-					</Table.Header>
+			<div class="flex min-h-0 flex-1 flex-col rounded-md border">
+				{#if canChart && chartsOpen}
+					<!-- Above the rows and below the toolbar: it pushes the table down rather than
+					     squeezing it sideways, so no column is hidden to make room for it. -->
+					<div class="h-64 shrink-0 border-b" transition:slide={{ duration: 150 }}>
+						<TableCharts
+							{facets}
+							labels={facetLabels}
+							selected={selectedFacets}
+							onToggle={toggleFacet}
+						/>
+					</div>
+				{/if}
 
-					<Table.Body>
-						{#each table.getRowModel().rows as row (row.id)}
-							<Table.Row
-								data-state={row.getIsSelected() && 'selected'}
-								class={rowClass?.(row.original) ?? ''}
-							>
-								{#each row.getVisibleCells() as cell (cell.id)}
-									<Table.Cell class={alignOf(cell.column.columnDef.meta)}>
-										<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
-									</Table.Cell>
-								{/each}
-							</Table.Row>
-						{:else}
-							<Table.Row>
-								<Table.Cell colspan={columns.length} class="text-center font-2xl">
-									<div class="flex flex-row items-center justify-center gap-2">
-										<Frown class="animate-bounce" />
-										{L.tableEmpty}
-									</div>
-								</Table.Cell>
-							</Table.Row>
-						{/each}
-					</Table.Body>
-					{#if hasFooter}
-						<Table.Footer class="sticky bottom-0 bg-muted/60 font-medium">
-							{#each table.getFooterGroups() as footerGroup (footerGroup.id)}
+				<div class="min-h-0 flex-1 overflow-auto">
+					<Table.Root class="relative">
+						<Table.Header
+							class="sticky top-0 z-10 bg-background shadow-[inset_0_-1px_0_var(--border)]"
+						>
+							{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
 								<Table.Row>
-									{#each footerGroup.headers as footer (footer.id)}
-										<Table.Cell
-											colspan={footer.colSpan}
-											class={alignOf(footer.column.columnDef.meta)}
+									{#each headerGroup.headers as header (header.id)}
+										<Table.Head
+											colspan={header.colSpan}
+											class={classOf(header.column.columnDef.meta)}
 										>
-											{#if !footer.isPlaceholder}
-												<FlexRender
-													content={footer.column.columnDef.footer}
-													context={footer.getContext()}
-												/>
+											{#if !header.isPlaceholder}
+												<div
+													class="flex items-center gap-1 {alignOf(header.column.columnDef.meta) ===
+													'text-right'
+														? 'justify-end'
+														: ''}"
+												>
+													<FlexRender
+														content={header.column.columnDef.header}
+														context={header.getContext()}
+													/>
+													<!-- The filter belongs on the column it filters, not in a panel
+												     the reader has to look away from the data to open. -->
+													{#if facetKeys.includes(header.column.id)}
+														<TableFacet
+															label={facetLabels[header.column.id] ?? header.column.id}
+															facets={facets[header.column.id] ?? []}
+															selected={selectedFacets[header.column.id] ?? []}
+															multi={!isServer}
+															onToggle={(v) => toggleFacet(header.column.id, v)}
+															onClear={() => clearFacet(header.column.id)}
+														/>
+													{/if}
+												</div>
 											{/if}
-										</Table.Cell>
+										</Table.Head>
 									{/each}
 								</Table.Row>
 							{/each}
-						</Table.Footer>
-					{/if}
-				</Table.Root>
-			</div>
+						</Table.Header>
 
-			{#if pages || server}
-				<TablePagination
-					page={pagerPage}
-					pageSize={pagerSize}
-					total={pagerTotal}
-					{pageSizes}
-					onPage={goToPage}
-					onPageSize={changePageSize}
-				/>
-			{/if}
+						<Table.Body>
+							{#each table.getRowModel().rows as row (row.id)}
+								<Table.Row
+									data-state={row.getIsSelected() && 'selected'}
+									class={rowClass?.(row.original) ?? ''}
+								>
+									{#each row.getVisibleCells() as cell (cell.id)}
+										<Table.Cell class={classOf(cell.column.columnDef.meta)}>
+											<FlexRender
+												content={cell.column.columnDef.cell}
+												context={cell.getContext()}
+											/>
+										</Table.Cell>
+									{/each}
+								</Table.Row>
+							{:else}
+								<Table.Row>
+									<Table.Cell colspan={columns.length} class="text-center font-2xl">
+										<div class="flex flex-row items-center justify-center gap-2">
+											<Frown class="animate-bounce" />
+											{L.tableEmpty}
+										</div>
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						</Table.Body>
+						{#if hasFooter || summary.length}
+							<Table.Footer class="sticky bottom-0 bg-muted/60 font-medium">
+								{#each hasFooter ? table.getFooterGroups() : [] as footerGroup (footerGroup.id)}
+									<Table.Row>
+										{#each footerGroup.headers as footer (footer.id)}
+											<Table.Cell
+												colspan={footer.colSpan}
+												class={classOf(footer.column.columnDef.meta)}
+											>
+												{#if !footer.isPlaceholder}
+													<FlexRender
+														content={footer.column.columnDef.footer}
+														context={footer.getContext()}
+													/>
+												{/if}
+											</Table.Cell>
+										{/each}
+									</Table.Row>
+								{/each}
+								{#each summary as line, i (i)}
+									<Table.Row class={line.strong ? 'font-bold' : ''}>
+										{#if columnCount > 1}
+											<Table.Cell colspan={columnCount - 1} class="text-right"
+												>{line.label}</Table.Cell
+											>
+										{/if}
+										<Table.Cell class="text-right">{line.value}</Table.Cell>
+									</Table.Row>
+								{/each}
+							</Table.Footer>
+						{/if}
+					</Table.Root>
+				</div>
+
+				{#if pages || server}
+					<TablePagination
+						page={pagerPage}
+						pageSize={pagerSize}
+						total={pagerTotal}
+						{pageSizes}
+						onPage={goToPage}
+						onPageSize={changePageSize}
+					/>
+				{/if}
+			</div>
 		</div>
 	</div>
-</div>
+{/if}
