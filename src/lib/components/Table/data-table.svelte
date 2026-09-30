@@ -424,6 +424,13 @@
 		server ? server.pagination.total : table.getFilteredRowModel().rows.length
 	);
 
+	/*
+	 * Drawn only when there is somewhere to go: "Page 1 of 1" between two disabled arrows is a
+	 * control that does nothing. A page past the first keeps it even when the rows now fit on
+	 * one — a stale `?page=3` would otherwise be an empty table with no way back.
+	 */
+	const showPager = $derived(Boolean(pages || server) && (pagerTotal > pagerSize || pagerPage > 1));
+
 	function goToPage(next: number) {
 		if (server) gotoPage(next);
 		else table.setPageIndex(next - 1);
@@ -715,7 +722,7 @@
 					</Table.Root>
 				</div>
 
-				{#if pages || server}
+				{#if showPager}
 					<TablePagination
 						page={pagerPage}
 						pageSize={pagerSize}

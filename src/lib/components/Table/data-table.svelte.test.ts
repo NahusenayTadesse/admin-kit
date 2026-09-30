@@ -152,6 +152,45 @@ describe('data-table.svelte', () => {
 		await expect.element(page.getByRole('button', { name: 'Previous page' })).toBeEnabled();
 	});
 
+	it('draws no pager when every row fits on one page', async () => {
+		renderTable({ data: rows, columns });
+
+		await expect.element(page.getByRole('cell', { name: 'Alice' })).toBeInTheDocument();
+		await expect.element(page.getByRole('button', { name: 'Next page' })).not.toBeInTheDocument();
+		await expect.element(page.getByText('Page 1 of 1')).not.toBeInTheDocument();
+	});
+
+	it('drops the pager once a search narrows the rows to one page', async () => {
+		renderTable({ data: manyRows, columns, defaultPageSize: 10 });
+
+		await expect.element(page.getByRole('button', { name: 'Next page' })).toBeInTheDocument();
+
+		await userEvent.fill(page.getByPlaceholder('Search Table...'), 'Row 25');
+
+		await expect.element(page.getByRole('button', { name: 'Next page' })).not.toBeInTheDocument();
+	});
+
+	it('draws no pager in server mode when the total fits on one page', async () => {
+		renderTable({
+			data: staff,
+			columns: staffColumns,
+			server: { pagination: { page: 1, pageSize: 20, total: 4 } }
+		});
+
+		await expect.element(page.getByRole('cell', { name: 'Abebe' })).toBeInTheDocument();
+		await expect.element(page.getByRole('button', { name: 'Next page' })).not.toBeInTheDocument();
+	});
+
+	it('keeps the pager on a page past the last, so there is a way back', async () => {
+		renderTable({
+			data: [],
+			columns: staffColumns,
+			server: { pagination: { page: 3, pageSize: 20, total: 4 } }
+		});
+
+		await expect.element(page.getByRole('button', { name: 'Previous page' })).toBeEnabled();
+	});
+
 	it('counts facets over every row and filters on one', async () => {
 		renderTable({
 			data: staff,
