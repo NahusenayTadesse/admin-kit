@@ -233,6 +233,9 @@ export type KitLabels = {
 	galleryRemove: (name: string) => string;
 	/** How many files are waiting to be uploaded with the form. */
 	galleryCount: (count: number) => string;
+	// ── YouTube player ────────────────────────────────────────────────────────
+	youtubePlay: (title: string) => string;
+	youtubeWatch: string;
 };
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
@@ -444,7 +447,9 @@ export const englishLabels: KitLabels = {
 	galleryClear: 'Clear',
 	galleryRemove: (name) => `Remove ${name}`,
 	galleryCount: (count) =>
-		count === 1 ? '1 image ready to upload' : `${count} images ready to upload`
+		count === 1 ? '1 image ready to upload' : `${count} images ready to upload`,
+	youtubePlay: (title) => `Play: ${title}`,
+	youtubeWatch: 'Watch on YouTube'
 };
 
 const KEY = Symbol.for('admin-kit-labels');
