@@ -14,7 +14,10 @@
 		name,
 		value = $bindable(),
 		required = false,
-		label = undefined
+		label = undefined,
+		id = undefined,
+		describedBy = undefined,
+		invalid = false
 	}: {
 		items: Item[];
 		name: string;
@@ -25,6 +28,11 @@
 		 * column name, so a foreign key read "Select Employee Id" and "Search Employee Id…".
 		 */
 		label?: string;
+		/** For a `<label for>`: goes on the button that opens the list. */
+		id?: string;
+		/** The ids of the hint and the error shown with the field. */
+		describedBy?: string;
+		invalid?: boolean;
 	} = $props();
 	const L = useLabels();
 	let open = $state(false);
@@ -55,7 +63,7 @@
 </script>
 
 <Popover.Root bind:open>
-	<Popover.Trigger bind:ref={triggerRef}>
+	<Popover.Trigger bind:ref={triggerRef} {id}>
 		{#snippet child({ props })}
 			<Button
 				{...props}
@@ -63,6 +71,8 @@
 				class="w-full justify-between capitalize"
 				role="combobox"
 				aria-expanded={open}
+				aria-invalid={invalid ? 'true' : undefined}
+				aria-describedby={describedBy}
 			>
 				{triggerContent}
 				<ChevronsUpDownIcon class="opacity-50" />

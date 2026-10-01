@@ -1,9 +1,9 @@
 /**
  * The one place server-side table filtering lives.
  *
- * Every paginated list page in the dashboard is driven by the same filter bar
- * (`$lib/QueryBuilder.svelte`): a search box, a page size, an optional date
- * range, and a handful of dropdowns that list out what you can pick. Before
+ * Every paginated list page in the dashboard is driven by the same controls
+ * (the `DataTable` in server mode): a search box, a page size, an optional date
+ * range, and a handful of column filters that list out what you can pick. Before
  * this module each `+page.server.ts` re-parsed those params, re-assembled the
  * `WHERE`, re-ran its own `count()` and re-shaped its own return object — nine
  * copies of the same five steps, drifting apart from each other.
@@ -23,7 +23,7 @@
  * and then returns `pagination(query, total)` and `currentQuery(query)` so the
  * component on the other side always receives the same shape.
  *
- * This deliberately only expresses filters the bar can offer: equality against
+ * This deliberately only expresses filters the table can offer: equality against
  * a listed option, a search term, and a date window. Free-form "contains this
  * but not that" condition building is not part of it — those tables get a
  * dropdown of real choices instead.
@@ -31,8 +31,9 @@
 import { and, asc, desc, type SQL } from 'drizzle-orm';
 import type { MySqlColumn } from 'drizzle-orm/mysql-core';
 import { currentMonthFilter } from '$lib/server/dates';
+import { isIsoDate } from '$lib/time';
 
-/** Page size options the bar offers; anything else is clamped into range. */
+/** Page size options the table offers; anything else is clamped into range. */
 const MAX_PAGE_SIZE = 100;
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -60,9 +61,11 @@ function toInt(raw: string | null, fallback: number): number {
 }
 
 /**
- * Reads the filter bar's params off the URL. `filterKeys` are the page's own
+ * Reads the table's params off the URL. `filterKeys` are the page's own
  * dropdowns — anything not listed is ignored, so a stale or hand-typed param
- * can never reach a `WHERE` clause.
+ * can never reach a `WHERE` clause. A date that is not a real `YYYY-MM-DD` is
+ * dropped the same way: `?dateStart=abc` used to reach the date filter and
+ * throw, which made a hand-typed URL a 500.
  */
 export function parseTableQuery<const F extends readonly string[]>(
 	url: URL,
@@ -90,6 +93,10 @@ export function parseTableQuery<const F extends readonly string[]>(
 	}
 
 	const askedSort = url.searchParams.get('sort')?.trim() || null;
+	const dateParam = (key: string) => {
+		const value = url.searchParams.get(key)?.trim();
+		return isIsoDate(value) ? value : null;
+	};
 
 	return {
 		search: url.searchParams.get('search')?.trim() ?? '',
@@ -97,8 +104,8 @@ export function parseTableQuery<const F extends readonly string[]>(
 		pageSize,
 		sort: askedSort && sortKeys.includes(askedSort) ? askedSort : null,
 		dir: url.searchParams.get('dir') === 'desc' ? 'desc' : 'asc',
-		dateStart: url.searchParams.get('dateStart')?.trim() || null,
-		dateEnd: url.searchParams.get('dateEnd')?.trim() || null,
+		dateStart: dateParam('dateStart'),
+		dateEnd: dateParam('dateEnd'),
 		filters,
 		limit: pageSize,
 		offset: (page - 1) * pageSize

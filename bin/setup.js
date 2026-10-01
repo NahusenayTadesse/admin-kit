@@ -181,7 +181,9 @@ function wireHooks(root, { mysql, hasDb, hasAuth, loginRoute }) {
 		'\taccess,',
 		hasAuth
 			? '\tpermissions: (event) => ({ permList: [], isSuperAdmin: Boolean(event.locals.user) })'
-			: '\tpermissions: () => ({ permList: [], isSuperAdmin: true })',
+			: '\tpermissions: () => ({ permList: [], isSuperAdmin: true }),',
+		// No sign-in in this project, so there is never a `locals.user` to require.
+		...(hasAuth ? [] : ['\trequireUser: false']),
 		'});',
 		''
 	];

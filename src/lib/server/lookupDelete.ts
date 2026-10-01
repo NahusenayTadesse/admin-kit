@@ -41,17 +41,10 @@ export function lookupDeleteAction(table: LookupTable, labelOf: Label) {
 				return fail(404);
 			}
 		} catch (err) {
+			// Loud in the log, quiet to the client: a failed query's message is the SQL, the
+			// table and column names and the bound parameters (see `hideFailure`).
 			console.error(`Error deleting ${name()}:`, err);
-			setFlash(
-				{
-					type: 'error',
-					message: serverLabels().lookupCouldNotDelete(
-						name(),
-						err instanceof Error ? err.message : serverLabels().unknownError
-					)
-				},
-				cookies
-			);
+			setFlash({ type: 'error', message: serverLabels().crudCouldNotDelete(name()) }, cookies);
 			return fail(500);
 		}
 

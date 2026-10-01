@@ -4,6 +4,7 @@ import path from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { env } from '$env/dynamic/private';
+import { removeFileField } from '$lib/files';
 
 /**
  * Everything the app knows about stored files: where they live, what they may be, and how to
@@ -98,19 +99,40 @@ export function generateFileName() {
 }
 
 /**
+ * An upload turned down for a reason the person uploading can act on: no file, too large, a type
+ * the store does not serve.
+ *
+ * Its own class so a caller can tell it from a fault. Thrown as a plain `Error`, "that file is
+ * larger than 10MB" reached the form as "Could not add Employee" with a 500 — the reason was in
+ * the log and the user was left guessing. `contentCrud` and `childCrud` put the message under the
+ * file's own field.
+ */
+export class UploadRefused extends Error {
+	constructor(
+		message: string,
+		/** The form field the file came in on, when the caller knows it. */
+		readonly field?: string
+	) {
+		super(message);
+		this.name = 'UploadRefused';
+	}
+}
+
+/**
  * Writes an uploaded file to the store and returns the name to put in the database.
  *
  * The name comes from `generateFileName` — see there for why its randomness is doing real work.
+ * Throws `UploadRefused` for a file it will not take.
  */
 export async function saveUploadedFile(file: File | undefined): Promise<string> {
 	// Was dereferenced unguarded — the signature admitted `undefined` and the body assumed
 	// otherwise, so a missing file threw a TypeError from inside the stream plumbing.
 	if (!file || file.size === 0) {
-		throw new Error(serverLabels().noFile);
+		throw new UploadRefused(serverLabels().noFile);
 	}
 
 	if (file.size > MAX_UPLOAD_BYTES) {
-		throw new Error(serverLabels().fileTooLarge(MAX_UPLOAD_BYTES / 1024 / 1024));
+		throw new UploadRefused(serverLabels().fileTooLarge(MAX_UPLOAD_BYTES / 1024 / 1024));
 	}
 
 	// The extension decides how the file is served later, so it is taken from the browser's
@@ -118,7 +140,7 @@ export async function saveUploadedFile(file: File | undefined): Promise<string> 
 	// nothing downstream validates.
 	const declared = file.type?.toLowerCase() ?? '';
 	if (!ACCEPTED_MIME_TYPES.has(declared)) {
-		throw new Error(serverLabels().fileTypeRefused);
+		throw new UploadRefused(serverLabels().fileTypeRefused);
 	}
 
 	const ext =
@@ -135,4 +157,50 @@ export async function saveUploadedFile(file: File | undefined): Promise<string> 
 	await pipeline(source, fs.createWriteStream(target));
 
 	return fileName;
+}
+
+/**
+ * A form's file fields, turned into what the row should hold.
+ *
+ * For each field in `values` (the validated form data, changed in place):
+ *
+ *   - a new upload is saved and the field becomes its stored name
+ *   - no upload, and `removeFileField` posted — the field becomes `null`, taking the attachment off
+ *   - neither — the field is dropped, so the write keeps whatever is already stored
+ *
+ * A refused upload is rethrown naming its field, so the form can say so under that input.
+ */
+export async function storeFileFields(
+	values: Record<string, unknown>,
+	fields: readonly string[],
+	posted: FormData
+): Promise<void> {
+	for (const field of fields) {
+		const file = values[field];
+
+		if (file instanceof File && file.size > 0) {
+			try {
+				values[field] = await saveUploadedFile(file);
+			} catch (err) {
+				if (err instanceof UploadRefused) throw new UploadRefused(err.message, field);
+				throw err;
+			}
+		} else if (posted.get(removeFileField(field)) === '1') {
+			values[field] = null;
+		} else {
+			delete values[field];
+		}
+	}
+}
+
+/**
+ * The posted form, read once so both the validator and `storeFileFields` can use it. A body that
+ * is not a form at all reads as an empty one, which the validator then turns down.
+ */
+export async function postedForm(request: Request): Promise<FormData> {
+	try {
+		return await request.formData();
+	} catch {
+		return new FormData();
+	}
 }

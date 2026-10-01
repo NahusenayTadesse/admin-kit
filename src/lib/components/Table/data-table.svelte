@@ -68,9 +68,10 @@
 	 * `defaultPageSize`. That was the point — a patient list cannot put four thousand rows on one
 	 * page — but it is visible on every list in the app.
 	 *
-	 * Non-goal: exporting more than you can see. In server mode the PDF and CSV export the current
-	 * page, because that is the only data the browser has. A whole-result export is a server
-	 * endpoint, not a button on the client.
+	 * Print and CSV carry every row the browser holds: the whole filtered list in client mode,
+	 * whatever page is showing. Non-goal: exporting more than that. In server mode they export
+	 * the current page, because that is the only data the browser has. A whole-result export is
+	 * a server endpoint, not a button on the client.
 	 */
 	type Props = {
 		columns: ColumnDef<TData, TValue>[];

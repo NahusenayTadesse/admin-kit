@@ -15,12 +15,15 @@
 		data = $bindable(''), // Expects "YYYY-MM-DD,YYYY-MM-DD"
 		oldDays = false,
 		year = false,
-		futureDays = false
+		futureDays = false,
+		id = undefined
 	}: {
 		data: string;
 		oldDays?: boolean;
 		year?: boolean;
 		futureDays?: boolean;
+		/** For a `<label for>`: goes on the button that opens the picker. */
+		id?: string;
 	} = $props();
 
 	const tz = getLocalTimeZone();
@@ -54,6 +57,7 @@
 
 <Popover.Root>
 	<Popover.Trigger
+		{id}
 		class={cn(
 			buttonVariants({
 				variant: 'outline',

@@ -19,6 +19,16 @@ export function fileUrl(name: string | null | undefined): string {
 	return name ? `${FILE_ROUTE}/${encodeURIComponent(name)}` : '';
 }
 
+/**
+ * The form field that says "take this attachment off": posted as `1` by `FileUpload` when the
+ * stored file was cleared and no new one chosen, and read by `contentCrud` and `childCrud`, which
+ * then null the column. Without it a cleared file field looks exactly like an untouched one, and
+ * an attachment could be replaced but never removed.
+ */
+export function removeFileField(name: string): string {
+	return `${name}__remove`;
+}
+
 /** Where files an app has declared public are served from (`server/servePublicFile`). */
 export const PUBLIC_FILE_ROUTE = '/media';
 

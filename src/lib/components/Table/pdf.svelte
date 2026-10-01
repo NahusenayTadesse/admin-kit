@@ -5,6 +5,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { page } from '$app/state';
 	import Papa from 'papaparse';
+	import { localClock, localDate } from '$lib/time';
 
 	// Accept parameters directly from the parent Mega Component
 	const {
@@ -16,6 +17,21 @@
 	 * Extracts clean data rows out of TanStack Table's internal memory state machine.
 	 * Completely isolates cell data values while bypassing UI components.
 	 */
+	/**
+	 * A date as text a spreadsheet reads: `2026-09-30`, with the local time after it when there is
+	 * one. Left to the number branch below, a `Date` is its millisecond count and was exported as
+	 * `1,790,750,145,285.00`.
+	 */
+	function exportDate(value: Date): string {
+		if (Number.isNaN(value.getTime())) return '';
+
+		// A `date` column comes back as midnight UTC: the day is the value, and there is no time.
+		if (value.getTime() % 86_400_000 === 0) return value.toISOString().slice(0, 10);
+
+		const clock = localClock(value);
+		return clock === '00:00' ? localDate(value) : `${localDate(value)} ${clock}`;
+	}
+
 	function getTableData() {
 		if (!table) {
 			console.error('TanStack table instance was not provided to the export component.');
@@ -49,13 +65,18 @@
 		});
 
 		// 2. Map Row Data matrices
-		const rowModel = table.getRowModel();
+		// Every row the table holds, filtered and sorted as on screen, not only the page in view:
+		// in client mode the browser has the whole list, and `getRowModel()` exported twenty rows
+		// of two hundred. In server mode the page is all there is, so this is that page.
+		const rowModel = table.getPrePaginationRowModel();
 		const rows: string[][] = rowModel.rows.map((row: any) => {
 			return validColumnIds.map((columnId) => {
 				const cell = row.getAllCells().find((c: any) => c.column.id === columnId);
 				if (!cell) return '';
 
 				let value = cell.renderValue();
+
+				if (value instanceof Date) return exportDate(value);
 
 				// Handle complex fallback payloads gracefully
 				if (typeof value === 'object' && value !== null) {
@@ -275,14 +296,23 @@
 		frameDoc.close();
 	}
 
+	/**
+	 * Cells a spreadsheet would run as a formula, which get a leading apostrophe so they open as
+	 * text: a customer named `=HYPERLINK(…)` is data, not an instruction. A negative amount is the
+	 * one thing that starts with `-` and must stay a number.
+	 */
+	const FORMULA = /^[=+@\t\r]|^-(?!\d[\d,]*(\.\d+)?$)/;
+
 	function exportTableToCSV() {
 		const parsed = getTableData();
 		if (!parsed) return;
 
 		const csvData = [parsed.headers, ...parsed.rows];
-		const csv = Papa.unparse(csvData);
+		const csv = Papa.unparse(csvData, { escapeFormulae: FORMULA });
 
-		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		// The byte-order mark is what tells Excel the file is UTF-8; without it Amharic opens as
+		// mojibake.
+		const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement('a');
 

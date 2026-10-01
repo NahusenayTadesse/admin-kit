@@ -19,6 +19,26 @@ describe('InputComp.svelte', () => {
 		await expect.element(page.getByLabelText('Name')).toBeInTheDocument();
 	});
 
+	// The pickers never had the id at all: their labels pointed nowhere for as long as the input's.
+	it('associates the label with a select, a combobox and a date picker too', async () => {
+		const errors = writable<Record<string, unknown>>({});
+		const items = [{ value: 1, name: 'Addis Ababa' }];
+
+		for (const [type, label] of [
+			['select', 'Branch'],
+			['combo', 'Supplier'],
+			['date', 'Expiry']
+		] as const) {
+			const form = writable<Record<string, unknown>>({ field: '' });
+			const { unmount } = render(InputComp, { label, form, errors, type, name: 'field', items });
+
+			const control = page.getByLabelText(label, { exact: true });
+			await expect.element(control).toBeInTheDocument();
+			expect(control.element().tagName).toBe('BUTTON');
+			unmount();
+		}
+	});
+
 	it('marks the field invalid and announces the message', async () => {
 		const form = writable<Record<string, unknown>>({ name: '' });
 		const errors = writable<Record<string, unknown>>({ name: ['Name is required'] });

@@ -17,7 +17,8 @@
  * `hooks.server.ts` enforces it on every request with `access.ruleForPath`; the menus read the
  * same object (through `<KitProvider>`) to decide what to render, so a button never leads
  * somewhere the click would 403. Order matters: the first matching prefix wins, so specific paths
- * come before general ones.
+ * come before general ones. A prefix matches whole segments: `/dashboard/sales` is that page and
+ * everything below it, and not `/dashboard/salesforce`.
  */
 
 export type RouteRule = {
@@ -41,6 +42,8 @@ export type Access = {
 	/** The area closed by default. Paths outside it are not this module's business. */
 	root: string;
 	rules: readonly RouteRule[];
+	/** Whether `pathname` is inside `root`, and so closed unless a rule opens it. */
+	guards(pathname: string): boolean;
 	/** The first rule matching `pathname`, or undefined when none claims it. */
 	ruleForPath(pathname: string): RouteRule | undefined;
 	/** The permission `pathname` sits behind, or undefined when it needs none (or has no rule). */
@@ -53,6 +56,35 @@ export type Access = {
 	canVisit(pathname: string, permList: readonly string[] | undefined | null): boolean;
 };
 
+/**
+ * The path as the router reads it, or null when it cannot be read at all.
+ *
+ * SvelteKit matches a route against the *decoded* path and leaves `event.url.pathname` as it was
+ * sent, so `/dashboard/admin-panel/%72oles` opens the roles page while reading, to a plain string
+ * comparison, like a path no specific rule names. Compared raw, it fell through to the general
+ * `/dashboard/admin-panel` rule, and `/%64ashboard/…` was not under the root at all. Every check
+ * here therefore decodes first, the same way the router does (`%25` stays, so a literal percent
+ * sign is not decoded twice).
+ *
+ * A query or a fragment is dropped: the menus pass whole hrefs to `canVisit`, and
+ * `/dashboard/reports?tab=sales` is the reports page.
+ */
+function routedPath(pathname: string): string | null {
+	try {
+		return pathname.split(/[?#]/)[0].split('%25').map(decodeURI).join('%25');
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Whether `pathname` is `prefix` or below it, on a segment boundary: `/dashboard/sales` claims
+ * `/dashboard/sales/7` and not `/dashboard/salesforce`.
+ */
+function isWithin(pathname: string, prefix: string): boolean {
+	return pathname === prefix || pathname.startsWith(prefix.endsWith('/') ? prefix : prefix + '/');
+}
+
 export function createAccess({
 	root = '/dashboard',
 	rules
@@ -60,20 +92,30 @@ export function createAccess({
 	root?: string;
 	rules: readonly RouteRule[];
 }): Access {
-	const ruleForPath = (pathname: string) =>
+	const ruleFor = (path: string) =>
 		rules.find((rule) =>
-			rule.exact
-				? pathname === rule.prefix || pathname === rule.prefix + '/'
-				: pathname.startsWith(rule.prefix)
+			rule.exact ? path === rule.prefix || path === rule.prefix + '/' : isWithin(path, rule.prefix)
 		);
+
+	const ruleForPath = (pathname: string) => {
+		const path = routedPath(pathname);
+		return path === null ? undefined : ruleFor(path);
+	};
+
+	const guards = (pathname: string) => {
+		const path = routedPath(pathname);
+		// A path that cannot be decoded is nobody's page; closed, like any other unclaimed one.
+		return path === null || isWithin(path, root);
+	};
 
 	return {
 		root,
 		rules,
+		guards,
 		ruleForPath,
 		permissionForPath: (pathname) => ruleForPath(pathname)?.permission ?? undefined,
 		canVisit(pathname, permList) {
-			if (!pathname.startsWith(root)) return true;
+			if (!guards(pathname)) return true;
 
 			const rule = ruleForPath(pathname);
 			if (!rule) return false;
@@ -114,7 +156,7 @@ export function gateRefusal(
 	pathname: string,
 	permList: readonly string[] | undefined | null
 ): string | null {
-	if (!pathname.startsWith(access.root)) return null;
+	if (!access.guards(pathname)) return null;
 
 	const match = access.ruleForPath(pathname);
 	if (!match) {

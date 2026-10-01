@@ -202,37 +202,6 @@ export type KitLabels = {
 	pwGenerateFirst: string;
 	pwCopied: string;
 	pwCopyFailed: string;
-	// ── Query builder and the chart filter menu ───────────────────────────────
-	qbTitle: string;
-	qbDescription: string;
-	qbSearchRows: string;
-	qbResults: (count: number) => string;
-	qbHide: string;
-	qbClearAll: string;
-	qbSearch: string;
-	qbPageSize: string;
-	qbPerPage: (count: number) => string;
-	qbDateRange: string;
-	qbNoFilterUi: string;
-	fmTitle: string;
-	fmDescription: string;
-	fmFilters: string;
-	fmActive: (count: number) => string;
-	fmReset: string;
-	fmResetDone: string;
-	fmAll: (what: string) => string;
-	fmSelected: (count: number) => string;
-	fmShowing: string;
-	fmOf: string;
-	fmRecords: string;
-	fmChartType: string;
-	fmHighlighted: (count: number) => string;
-	fmItems: (label: string, count: number) => string;
-	fmClickBar: string;
-	fmClickSegment: string;
-	fmSearch: (what: string) => string;
-	fmActiveFilters: (count: number) => string;
-	fmDistribution: (what: string, records: number) => string;
 };
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
@@ -416,39 +385,7 @@ export const englishLabels: KitLabels = {
 	pwGenerating: 'Generating Password',
 	pwGenerateFirst: 'Generate a password first',
 	pwCopied: 'Password copied to clipboard',
-	pwCopyFailed: 'Failed to copy password',
-
-	qbTitle: 'Query Builder',
-	qbDescription: 'Filter, search, and manage dataset limits',
-	qbSearchRows: 'Search rows...',
-	qbResults: (count) => `${count.toLocaleString()} result${count !== 1 ? 's' : ''}`,
-	qbHide: 'Hide',
-	qbClearAll: 'Clear all',
-	qbSearch: 'Search',
-	qbPageSize: 'Page Size',
-	qbPerPage: (count) => `${count} per page`,
-	qbDateRange: 'Date Range',
-	qbNoFilterUi: 'Custom filters configured, but no filter UI provided.',
-	fmTitle: 'Filter Charts',
-	fmDescription: 'Narrow the data shown in each chart',
-	fmFilters: 'Filters',
-	fmActive: (count) => `${count} active`,
-	fmReset: 'Reset',
-	fmResetDone: 'Filters reset',
-	fmAll: (what) => `All ${what}`,
-	fmSelected: (count) => `${count} selected`,
-	fmShowing: 'Showing',
-	fmOf: 'of',
-	fmRecords: 'records',
-	fmChartType: 'Chart Type',
-	fmHighlighted: (count) => `${count} value${count > 1 ? 's' : ''} highlighted`,
-	fmItems: (label, count) => ` ${label}: ${count} items`,
-	fmClickBar: '💡 Click a bar to toggle that value as a filter',
-	fmClickSegment: '💡 Click a segment to toggle that value as a filter',
-	fmSearch: (what) => `Search ${what}...`,
-	fmActiveFilters: (count) => `${count} active filter${count > 1 ? 's' : ''}`,
-	fmDistribution: (what, records) =>
-		`Distribution of ${what} across ${records} record${records !== 1 ? 's' : ''}`
+	pwCopyFailed: 'Failed to copy password'
 };
 
 const KEY = Symbol.for('admin-kit-labels');

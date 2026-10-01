@@ -8,7 +8,7 @@ import type { MySqlTable } from 'drizzle-orm/mysql-core';
 
 import { db } from '$lib/server/db';
 import { isDuplicateKey } from '$lib/server/dbErrors';
-import { saveUploadedFile } from '$lib/server/files';
+import { postedForm, storeFileFields, UploadRefused } from '$lib/server/files';
 import { notDeleted, softDeleteOwnedRecord } from '$lib/server/softDelete';
 import { recordAudit, type AuditedTable } from '$lib/server/audit';
 import { insertReturningId } from '$lib/server/db/insert';
@@ -70,6 +70,11 @@ export interface ChildCrudOptions {
 	/** Fields holding an uploaded File; saved to disk, stored as a filename. */
 	fileFields?: string[];
 	/**
+	 * The unique column a duplicate collides on, so `ER_DUP_ENTRY` is reported under the field the
+	 * user typed. Defaults to `name`, as in `contentCrud`.
+	 */
+	uniqueField?: string;
+	/**
 	 * Runs after the form is validated and before the write, for columns the server must decide.
 	 * The owner id is already stamped by the time this is called.
 	 *
@@ -119,8 +124,8 @@ export class WriteRefused extends Error {
 	}
 }
 
-/** The form's response to a `WriteRefused`: the reason under its field, and a 400. */
-function refused(form: Parameters<typeof message>[0], err: WriteRefused) {
+/** The form's response to a refused write or upload: the reason under its field, and a 400. */
+function refused(form: Parameters<typeof message>[0], err: WriteRefused | UploadRefused) {
 	if (err.field) setError(form, err.field as never, err.message);
 	return message(form, { type: 'error', text: err.message }, { status: 400 });
 }
@@ -135,6 +140,7 @@ export function childCrud({
 	addSchema,
 	editSchema,
 	fileFields = [],
+	uniqueField = 'name',
 	transform,
 	audit,
 	permission
@@ -144,7 +150,14 @@ export function childCrud({
 
 	const hasSecureFields = 'isActive' in table;
 
-	const toRow = async (data: Record<string, unknown>) => {
+	/** The form's response to a name that is already taken: said under that field, and a 400. */
+	const duplicate = (form: Parameters<typeof message>[0]) => {
+		const text = serverLabels().crudExists(labelText(label));
+		setError(form, uniqueField as never, text);
+		return message(form, { type: 'error', text }, { status: 400 });
+	};
+
+	const toRow = async (data: Record<string, unknown>, posted: FormData) => {
 		// `id` names the row, never a column to write.
 		const values = { ...data };
 		delete values.id;
@@ -162,15 +175,8 @@ export function childCrud({
 			delete values.status;
 		}
 
-		for (const field of fileFields) {
-			const file = values[field];
-			// No new upload means "keep whatever is already stored".
-			if (file instanceof File && file.size > 0) {
-				values[field] = await saveUploadedFile(file);
-			} else {
-				delete values[field];
-			}
-		}
+		// No new upload means "keep whatever is already stored", unless the form took it off.
+		await storeFileFields(values, fileFields, posted);
 
 		return values as WritableRow;
 	};
@@ -207,7 +213,8 @@ export function childCrud({
 		actions: {
 			add: async (event: RequestEvent, ownerId: number) => {
 				if (permission) requirePermission(event.locals, permission);
-				const form = await superValidate(event.request, zod4(addSchema));
+				const posted = await postedForm(event.request);
+				const form = await superValidate(posted, zod4(addSchema));
 
 				if (!form.valid) {
 					return message(
@@ -218,7 +225,7 @@ export function childCrud({
 				}
 
 				try {
-					let values = await toRow(form.data);
+					let values = await toRow(form.data, posted);
 					// Stamped here, never read off the form: a client that posts its own owner id
 					// would otherwise file the row under somebody else's parent.
 					values[ownerColumn] = ownerId;
@@ -240,15 +247,9 @@ export function childCrud({
 						text: serverLabels().crudAdded(labelText(label))
 					});
 				} catch (err) {
-					if (err instanceof WriteRefused) return refused(form, err);
-					if (isDuplicateKey(err)) {
-						setError(form, 'name' as never, serverLabels().crudExists(labelText(label)));
-						return message(
-							form,
-							{ type: 'error', text: serverLabels().crudExists(labelText(label)) },
-							{ status: 400 }
-						);
-					}
+					if (err instanceof WriteRefused || err instanceof UploadRefused)
+						return refused(form, err);
+					if (isDuplicateKey(err)) return duplicate(form);
 
 					console.error(`Failed to add ${labelText(label)}:`, err);
 					return message(
@@ -261,7 +262,8 @@ export function childCrud({
 
 			edit: async (event: RequestEvent, ownerId: number) => {
 				if (permission) requirePermission(event.locals, permission);
-				const form = await superValidate(event.request, zod4(editSchema));
+				const posted = await postedForm(event.request);
+				const form = await superValidate(posted, zod4(editSchema));
 
 				if (!form.valid) {
 					return message(
@@ -273,7 +275,7 @@ export function childCrud({
 
 				try {
 					const rowId = Number(form.data.id);
-					const values = await toRow(form.data);
+					const values = await toRow(form.data, posted);
 					if (hasSecureFields) values.updatedBy = event.locals.user?.id;
 
 					// The owner is in the `where`, not the `set`: an edit may never move a row to a
@@ -313,7 +315,11 @@ export function childCrud({
 								{ status: 404 }
 							);
 				} catch (err) {
-					if (err instanceof WriteRefused) return refused(form, err);
+					if (err instanceof WriteRefused || err instanceof UploadRefused)
+						return refused(form, err);
+					// Renaming a row onto a name already taken is the user's to fix, not a fault.
+					if (isDuplicateKey(err)) return duplicate(form);
+
 					console.error(`Failed to update ${labelText(label)}:`, err);
 					return message(
 						form,

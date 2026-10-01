@@ -1,15 +1,15 @@
 import { labelText, serverLabels, type Label } from './labels';
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { and, asc, eq, sql, type AnyColumn, type SQL } from 'drizzle-orm';
+import { and, asc, eq, type AnyColumn, type SQL } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { MySqlColumn, MySqlTable } from 'drizzle-orm/mysql-core';
 import { db } from '$lib/server/db';
 import { isDuplicateKey } from '$lib/server/dbErrors';
-import { saveUploadedFile } from '$lib/server/files';
+import { postedForm, storeFileFields, UploadRefused } from '$lib/server/files';
 import { requireSuperAdmin } from '$lib/server/permissions';
-import { notDeleted } from '$lib/server/softDelete';
+import { notDeleted, softDeleteLookup } from '$lib/server/softDelete';
 import { WriteRefused } from '$lib/server/childCrud';
 import { recordAudit, type AuditedTable } from '$lib/server/audit';
 import { insertReturningId } from '$lib/server/db/insert';
@@ -24,17 +24,7 @@ export const sortOrderField = z.coerce.number().int().min(0).default(0);
 type AnyTable = MySqlTable & Record<string, any>;
 type AnySchema = z.ZodType<any, any>;
 /** Validated form data always carries the row's own columns, and an id on edit. */
-type FormData = Record<string, any> & { id: number };
-
-/**
- * A row on its way into `insert().values()` or `update().set()`.
- *
- * `contentCrud` is generic over the table so `rows` comes back typed for the caller, but the
- * *write* side is assembled at runtime from form data, `transform` and the reference remapping —
- * there is no static type that describes it. Named here rather than cast inline four times, per
- * an unavoidable `any` gets a name and a reason.
- */
-type WritableRow = Record<string, unknown>;
+type FormValues = Record<string, any> & { id: number };
 
 /**
  * The list query while it is being assembled.
@@ -171,7 +161,7 @@ export function contentCrud<T extends AnyTable>({
 	const isSoftDeletable = 'deletedAt' in table;
 
 	/** Turns validated form data into a row, minus anything that must not change. */
-	const toRow = async (data: Record<string, any>) => {
+	const toRow = async (data: Record<string, any>, posted: FormData) => {
 		const { id, ...values } = data;
 
 		/*
@@ -189,15 +179,8 @@ export function contentCrud<T extends AnyTable>({
 			delete values.status;
 		}
 
-		for (const field of fileFields) {
-			const file = values[field];
-			// No new upload means "keep whatever is already stored".
-			if (file instanceof File && file.size > 0) {
-				values[field] = await saveUploadedFile(file);
-			} else {
-				delete values[field];
-			}
-		}
+		// No new upload means "keep whatever is already stored", unless the form took it off.
+		await storeFileFields(values, fileFields, posted);
 
 		for (const field of listFields) {
 			const raw = values[field];
@@ -291,7 +274,8 @@ export function contentCrud<T extends AnyTable>({
 	const actions = {
 		add: async (event: RequestEvent) => {
 			const { request, locals } = event;
-			const form = await superValidate(request, zod4(addSchema));
+			const posted = await postedForm(request);
+			const form = await superValidate(posted, zod4(addSchema));
 			if (!form.valid) {
 				return message(
 					form,
@@ -301,7 +285,7 @@ export function contentCrud<T extends AnyTable>({
 			}
 
 			try {
-				let values = await toRow(form.data as FormData);
+				let values = await toRow(form.data as FormValues, posted);
 				if (hasSecureFields) values.createdBy = locals.user?.id;
 				if (transform) values = await transform(values, event);
 				if (audit) {
@@ -315,8 +299,9 @@ export function contentCrud<T extends AnyTable>({
 				}
 				return message(form, { type: 'success', text: serverLabels().crudAdded(labelText(label)) });
 			} catch (err) {
-				// A rule the transform enforced: the reason under its field, as `childCrud` does.
-				if (err instanceof WriteRefused) {
+				// A rule the transform enforced, or a file the store will not take: the reason under
+				// its field, as `childCrud` does.
+				if (err instanceof WriteRefused || err instanceof UploadRefused) {
 					if (err.field) setError(form, err.field as never, err.message);
 					return message(form, { type: 'error', text: err.message }, { status: 400 });
 				}
@@ -340,7 +325,8 @@ export function contentCrud<T extends AnyTable>({
 
 		edit: async (event: RequestEvent) => {
 			const { request, locals } = event;
-			const form = await superValidate(request, zod4(editSchema));
+			const posted = await postedForm(request);
+			const form = await superValidate(posted, zod4(editSchema));
 			if (!form.valid) {
 				return message(
 					form,
@@ -350,27 +336,34 @@ export function contentCrud<T extends AnyTable>({
 			}
 
 			try {
-				const data = form.data as FormData;
-				let values = await toRow(data);
+				const data = form.data as FormValues;
+				let values = await toRow(data, posted);
 				if (hasSecureFields) values.updatedBy = locals.user?.id;
-				await db.transaction(async (tx) => {
+
+				// A deleted row is not there to edit, whatever id the form posts.
+				const scope = isSoftDeletable
+					? and(eq(table.id, data.id), notDeleted(table as never))
+					: eq(table.id, data.id);
+
+				const found = await db.transaction(async (tx) => {
 					// Read first, in the same transaction: the transform may need the row as it was,
-					// and the audit row needs what changed.
-					const [before] =
-						transform || audit
-							? await tx
-									.select()
-									.from(table as MySqlTable)
-									.where(eq(table.id, data.id))
-							: [undefined];
+					// the audit row needs what changed, and a row that is gone must say so rather
+					// than report a save that matched nothing.
+					const [before] = await tx
+						.select()
+						.from(table as MySqlTable)
+						.where(scope)
+						.limit(1);
+					if (!before) return false;
+
 					const written = transform
-						? await transform(values, event, before as Record<string, any> | undefined)
+						? await transform(values, event, before as Record<string, any>)
 						: values;
 					await tx
 						.update(table)
 						.set(written as Partial<T['$inferInsert']>)
-						.where(eq(table.id, data.id));
-					if (audit && before) {
+						.where(scope);
+					if (audit) {
 						await recordAudit(tx, event, {
 							table: audit,
 							recordId: data.id,
@@ -379,14 +372,20 @@ export function contentCrud<T extends AnyTable>({
 							after: written
 						});
 					}
+					return true;
 				});
-				return message(form, {
-					type: 'success',
-					text: serverLabels().crudUpdated(labelText(label))
-				});
+
+				return found
+					? message(form, { type: 'success', text: serverLabels().crudUpdated(labelText(label)) })
+					: message(
+							form,
+							{ type: 'error', text: serverLabels().crudGone(labelText(label)) },
+							{ status: 404 }
+						);
 			} catch (err) {
-				// A rule the transform enforced: the reason under its field, as `childCrud` does.
-				if (err instanceof WriteRefused) {
+				// A rule the transform enforced, or a file the store will not take: the reason under
+				// its field, as `childCrud` does.
+				if (err instanceof WriteRefused || err instanceof UploadRefused) {
 					if (err.field) setError(form, err.field as never, err.message);
 					return message(form, { type: 'error', text: err.message }, { status: 400 });
 				}
@@ -417,7 +416,8 @@ export function contentCrud<T extends AnyTable>({
 		 * status of the row if the deletion is ever reversed. `deletedAt` is the
 		 * only marker a delete sets; see `$lib/server/softDelete`.
 		 */
-		delete: async ({ request, locals }: RequestEvent) => {
+		delete: async (event: RequestEvent) => {
+			const { request, locals } = event;
 			requireSuperAdmin(locals);
 
 			const form = await superValidate(request, zod4(idSchema));
@@ -430,21 +430,38 @@ export function contentCrud<T extends AnyTable>({
 			}
 
 			try {
-				const id = (form.data as FormData).id;
-				if (isSoftDeletable) {
-					await db
-						.update(table)
-						.set({ deletedAt: sql`NOW()`, deletedBy: locals.user?.id } as WritableRow)
-						.where(eq(table.id, id));
-				} else {
-					// No delete marker on this table, so there is nothing to soft
-					// delete — the caller gets a hard delete or nothing at all.
-					await db.delete(table).where(eq(table.id, id));
-				}
-				return message(form, {
-					type: 'success',
-					text: serverLabels().crudDeleted(labelText(label))
+				const id = (form.data as FormValues).id;
+
+				// In a transaction with its audit row, the same contract as add and edit.
+				const removed = await db.transaction(async (tx) => {
+					let done: boolean;
+					if (isSoftDeletable) {
+						done = await softDeleteLookup(tx, table as never, id, locals.user?.id);
+					} else {
+						// No delete marker on this table, so there is nothing to soft
+						// delete — the caller gets a hard delete or nothing at all.
+						const [existing] = await tx
+							.select({ id: table.id })
+							.from(table as MySqlTable)
+							.where(eq(table.id, id))
+							.limit(1);
+						if (existing) await tx.delete(table).where(eq(table.id, id));
+						done = Boolean(existing);
+					}
+
+					if (done && audit) {
+						await recordAudit(tx, event, { table: audit, recordId: id, action: 'delete' });
+					}
+					return done;
 				});
+
+				return removed
+					? message(form, { type: 'success', text: serverLabels().crudDeleted(labelText(label)) })
+					: message(
+							form,
+							{ type: 'error', text: serverLabels().crudGone(labelText(label)) },
+							{ status: 404 }
+						);
 			} catch (err) {
 				console.error(`Failed to delete ${labelText(label)}:`, err);
 				return message(

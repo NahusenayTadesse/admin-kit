@@ -55,6 +55,10 @@
 	 *   for it. Six route files hand-rolled the attribute themselves, which is §2's second copy.
 	 * - `step="any"` went onto every plain input, including text ones, and switched off step
 	 *   validation on numbers.
+	 *
+	 * The pickers had the first of those for longer: a select, a combobox and both date fields
+	 * were never given the `id` at all, so their labels pointed nowhere too. Each now takes it on
+	 * the button that opens it.
 	 */
 	/*
 	 * Taken from what the 76 call sites actually pass, not from what a form field ought to have:
@@ -196,7 +200,15 @@
 	{:else if type === 'file'}
 		<FileUpload {name} {form} {image} {placeholder} />
 	{:else if type === 'select'}
-		<SelectComp {name} {label} bind:value={$form[name]} {items} />
+		<SelectComp
+			{name}
+			{label}
+			bind:value={$form[name]}
+			{items}
+			id={fieldId}
+			{invalid}
+			{describedBy}
+		/>
 	{:else if type === 'date'}
 		<DatePicker
 			bind:data={$form[name]}
@@ -205,13 +217,23 @@
 			{futureDays}
 			allowEmpty={allowEmpty ?? !required}
 			{calendar}
+			id={fieldId}
 		/>
 		<input type="hidden" {name} bind:value={$form[name]} />
 	{:else if type === 'dateMultiple'}
-		<DateRangePicker bind:data={$form[name]} {oldDays} {year} {futureDays} />
+		<DateRangePicker bind:data={$form[name]} {oldDays} {year} {futureDays} id={fieldId} />
 		<input type="hidden" {name} bind:value={$form[name]} />
 	{:else if type === 'combo'}
-		<ComboboxComp {name} {label} bind:value={$form[name]} {items} {required} />
+		<ComboboxComp
+			{name}
+			{label}
+			bind:value={$form[name]}
+			{items}
+			{required}
+			id={fieldId}
+			{invalid}
+			{describedBy}
+		/>
 	{:else if type === 'checkbox'}
 		<CheckboxComp {items} bind:checkedValues={$form[name]} />
 		<input type="hidden" {name} bind:value={$form[name]} />

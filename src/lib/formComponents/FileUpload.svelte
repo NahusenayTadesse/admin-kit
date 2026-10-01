@@ -13,7 +13,7 @@
 	import { fileProxy } from 'sveltekit-superforms';
 	import type { Writable } from 'svelte/store';
 	import imageCompression from 'browser-image-compression';
-	import { fileUrl } from '$lib/files';
+	import { fileUrl, removeFileField } from '$lib/files';
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	/** Loosely typed for the reason `InputComp` gives: this component indexes the store by `name`. */
@@ -46,6 +46,17 @@
 	let file = $state(fileProxy(form, name));
 	let isDragging = $state(false);
 	let isProcessing = $state(false);
+
+	/*
+	 * The stored file was taken off with the ✕. Posted as its own field, because a cleared file
+	 * input is indistinguishable from an untouched one and the server keeps what is stored when
+	 * no new file arrives: the ✕ used to empty the preview and change nothing.
+	 */
+	let removed = $state(false);
+	$effect(() => {
+		// A stored file again — a save that kept it, or the dialog reused for another row.
+		if (image) removed = false;
+	});
 
 	async function handleFileSelection(files: FileList | null) {
 		if (!files || files.length === 0) return;
@@ -111,6 +122,9 @@
 		onchange={(e) => handleFileSelection(e.currentTarget.files)}
 		multiple={false}
 	/>
+	{#if removed && !$file?.length}
+		<input type="hidden" name={removeFileField(name)} value="1" />
+	{/if}
 
 	{#if $file?.length === 0 && image === ''}
 		<Label
@@ -168,9 +182,11 @@
 					variant="ghost"
 					size="icon"
 					class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
+					aria-label={L.clear}
 					onclick={() => {
 						file.set(undefined);
 						image = '';
+						removed = true;
 					}}
 				>
 					<X class="h-4 w-4" />
@@ -212,6 +228,7 @@
 					variant="ghost"
 					size="icon"
 					class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
+					aria-label={L.clear}
 					onclick={() => file.set(undefined)}
 				>
 					<X class="h-4 w-4" />

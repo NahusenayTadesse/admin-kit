@@ -36,6 +36,41 @@ describe('createAccess', () => {
 		expect(access.canVisit('/dashboard/admin-panel/users', ['settings.manage'])).toBe(false);
 	});
 
+	/*
+	 * SvelteKit routes on the decoded path and hands the hook the raw one. Compared raw, an
+	 * escaped letter walked past the specific rule to the general one below it — settings.manage
+	 * opened the users page — and an escaped letter in the root left the gate altogether.
+	 */
+	it('reads a percent-escaped path as the router does', () => {
+		expect(access.permissionForPath('/dashboard/admin-panel/%75sers')).toBe('users.manage');
+		expect(access.canVisit('/dashboard/admin-panel/%75sers', ['settings.manage'])).toBe(false);
+		expect(gateRefusal(access, '/dashboard/admin-panel/%75sers/7', ['settings.manage'])).toMatch(
+			/not allowed/
+		);
+
+		expect(access.guards('/%64ashboard/employees')).toBe(true);
+		expect(gateRefusal(access, '/%64ashboard/employees', [])).toMatch(/not allowed/);
+	});
+
+	it('closes a path that cannot be decoded', () => {
+		expect(access.canVisit('/dashboard/%E0%A4%A', ['employees.view'])).toBe(false);
+		expect(gateRefusal(access, '/dashboard/%E0%A4%A', [])).toMatch(/No permission is defined/);
+	});
+
+	it('matches a prefix on whole segments', () => {
+		expect(access.permissionForPath('/dashboard/employees/7')).toBe('employees.view');
+		// A different page that merely starts with the same letters has no rule, so it is closed.
+		expect(access.ruleForPath('/dashboard/employees-archive')).toBeUndefined();
+		expect(access.canVisit('/dashboard/employees-archive', ['employees.view'])).toBe(false);
+		// And a page that starts with the root's letters is not under the root.
+		expect(access.guards('/dashboardx')).toBe(false);
+	});
+
+	it('reads an href with a query or a fragment as its page', () => {
+		expect(access.canVisit('/dashboard/employees?tab=leave', ['employees.view'])).toBe(true);
+		expect(access.canVisit('/dashboard/employees#top', ['employees.view'])).toBe(true);
+	});
+
 	it('lets a super admin open every ruled page, but not an unruled one', () => {
 		const all = effectivePermissions(access, [], true);
 		expect(access.canVisit('/dashboard/admin-panel/users', all)).toBe(true);

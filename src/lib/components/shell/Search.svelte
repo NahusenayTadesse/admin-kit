@@ -31,10 +31,12 @@
 			<Command.Empty>{L.searchEmpty}</Command.Empty>
 			<Command.Group heading={L.searchSuggestions}>
 				{#each list as item (item.url)}
-					<Command.Item>
+					<!-- The item is the link itself: Enter clicks the highlighted item, and a link
+					     nested inside one was never reached by it, nor by a click beside the text. -->
+					<Command.LinkItem href={item.url} onSelect={() => (isOpen = false)}>
 						<Disc />
-						<a href={item.url} onclick={() => (isOpen = false)}>{item.label}</a>
-					</Command.Item>
+						{item.label}
+					</Command.LinkItem>
 				{/each}
 			</Command.Group>
 		</Command.List>

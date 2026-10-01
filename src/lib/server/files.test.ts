@@ -2,7 +2,14 @@ import { afterAll, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { FILES_DIR, MAX_UPLOAD_BYTES, mimeFor, resolveStoredFile, saveUploadedFile } from './files';
+import {
+	FILES_DIR,
+	MAX_UPLOAD_BYTES,
+	mimeFor,
+	resolveStoredFile,
+	saveUploadedFile,
+	UploadRefused
+} from './files';
 
 /**
  * The store holds identity documents and clinical attachments, so these are security tests
@@ -75,6 +82,11 @@ describe('saveUploadedFile', () => {
 
 	it('rejects a missing file instead of throwing from the stream plumbing', async () => {
 		await expect(saveUploadedFile(undefined)).rejects.toThrow('No file was uploaded.');
+	});
+
+	// Its own class, so a form can show the reason instead of "Could not add" and a 500.
+	it('refuses as an UploadRefused, which a caller can tell from a fault', async () => {
+		await expect(saveUploadedFile(undefined)).rejects.toBeInstanceOf(UploadRefused);
 	});
 
 	it('rejects an empty file', async () => {

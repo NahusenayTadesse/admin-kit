@@ -22,12 +22,11 @@ export type ServerLabels = {
 	lookupNoneSelected: (label: string) => string;
 	lookupNotFound: (label: string) => string;
 	lookupDeleted: (label: string) => string;
-	lookupCouldNotDelete: (label: string, reason: string) => string;
-	unknownError: string;
 	noFile: string;
 	fileTooLarge: (megabytes: number) => string;
 	fileTypeRefused: string;
 	noPermission: string;
+	signInRequired: string;
 	superAdminOnly: string;
 	notFound: string;
 };
@@ -46,12 +45,11 @@ export const englishServerLabels: ServerLabels = {
 	lookupNoneSelected: (label) => `No ${label} was selected.`,
 	lookupNotFound: (label) => `That ${label} was not found.`,
 	lookupDeleted: (label) => `${label} deleted.`,
-	lookupCouldNotDelete: (label, reason) => `Could not delete ${label}: ${reason}`,
-	unknownError: 'Unknown error',
 	noFile: 'No file was uploaded.',
 	fileTooLarge: (megabytes) => `That file is larger than ${megabytes}MB.`,
 	fileTypeRefused: 'That file type is not accepted.',
 	noPermission: 'You do not have permission to do that.',
+	signInRequired: 'Sign in to do that.',
 	superAdminOnly: 'Only a super administrator can delete records.',
 	notFound: 'Not found'
 };

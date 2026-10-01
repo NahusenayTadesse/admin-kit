@@ -4,8 +4,7 @@
 	import { selectItem, type Item } from '$lib/global';
 
 	// `onValueChange` is optional and simply forwarded to `Select.Root`. It lets a
-	// caller react to a change without binding, which the query builder needs:
-	// picking a different field has to reset that row's operator and operands.
+	// caller react to a change without binding.
 	let {
 		value = $bindable(),
 		items,
@@ -20,7 +19,12 @@
 		label = undefined,
 		/** The whole empty-trigger text, for a form in another language ("Select" is English). */
 		placeholder = undefined,
-		onValueChange = undefined
+		onValueChange = undefined,
+		/** For a `<label for>`: goes on the button that opens the list. */
+		id = undefined,
+		/** The ids of the hint and the error shown with the field. */
+		describedBy = undefined,
+		invalid = false
 	} = $props();
 	const L = useLabels();
 	const triggerContent = $derived(
@@ -32,7 +36,12 @@
 </script>
 
 <Select.Root type="single" {name} bind:value {onValueChange}>
-	<Select.Trigger class="w-full capitalize">
+	<Select.Trigger
+		{id}
+		class="w-full capitalize"
+		aria-invalid={invalid ? 'true' : undefined}
+		aria-describedby={describedBy}
+	>
 		{triggerContent}
 	</Select.Trigger>
 	<Select.Content>
