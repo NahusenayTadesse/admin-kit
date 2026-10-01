@@ -1,6 +1,6 @@
 {
 	"name": "@nahu/admin-kit",
-	"version": "0.1.19",
+	"version": "0.1.20",
 	"private": true,
 	"description": "The dashboard, table, form, filter, CRUD and file-storage pieces shared across my SvelteKit projects.",
 	"type": "module",
@@ -54,9 +54,11 @@
 		"tailwindcss": "^4.1.0"
 	},
 	"dependencies": {
+		"@friendofsvelte/tipex": "^0.2.0",
 		"@internationalized/date": "^3.12.2",
 		"@lucide/svelte": "^0.562.0",
 		"@tanstack/table-core": "^8.21.3",
+		"@tiptap/extension-placeholder": "^2.27.3",
 		"bits-ui": "^2.18.1",
 		"browser-image-compression": "^2.0.2",
 		"chart.js": "^4.5.1",

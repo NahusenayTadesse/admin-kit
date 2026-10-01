@@ -202,6 +202,37 @@ export type KitLabels = {
 	pwGenerateFirst: string;
 	pwCopied: string;
 	pwCopyFailed: string;
+	// ── Rich text editor ──────────────────────────────────────────────────────
+	richBold: string;
+	richItalic: string;
+	richUnderline: string;
+	richStrike: string;
+	richHeading2: string;
+	richHeading3: string;
+	richBullets: string;
+	richNumbers: string;
+	richQuote: string;
+	richCode: string;
+	richDivider: string;
+	richLink: string;
+	richUnlink: string;
+	richLinkApply: string;
+	/** The link was refused: only http(s), mailto and site paths are kept. */
+	richLinkInvalid: string;
+	richImage: string;
+	richUploadFailed: string;
+	richClear: string;
+	richUndo: string;
+	richRedo: string;
+	// ── Gallery upload ────────────────────────────────────────────────────────
+	galleryPrompt: string;
+	galleryDropHere: string;
+	galleryOptimizing: string;
+	galleryHint: string;
+	galleryClear: string;
+	galleryRemove: (name: string) => string;
+	/** How many files are waiting to be uploaded with the form. */
+	galleryCount: (count: number) => string;
 };
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
@@ -385,7 +416,35 @@ export const englishLabels: KitLabels = {
 	pwGenerating: 'Generating Password',
 	pwGenerateFirst: 'Generate a password first',
 	pwCopied: 'Password copied to clipboard',
-	pwCopyFailed: 'Failed to copy password'
+	pwCopyFailed: 'Failed to copy password',
+	richBold: 'Bold',
+	richItalic: 'Italic',
+	richUnderline: 'Underline',
+	richStrike: 'Strikethrough',
+	richHeading2: 'Heading',
+	richHeading3: 'Subheading',
+	richBullets: 'Bulleted list',
+	richNumbers: 'Numbered list',
+	richQuote: 'Quote',
+	richCode: 'Code block',
+	richDivider: 'Divider',
+	richLink: 'Link',
+	richUnlink: 'Remove link',
+	richLinkApply: 'Apply',
+	richLinkInvalid: 'Links must start with https://, mailto: or /',
+	richImage: 'Insert image',
+	richUploadFailed: 'The image could not be uploaded.',
+	richClear: 'Clear formatting',
+	richUndo: 'Undo',
+	richRedo: 'Redo',
+	galleryPrompt: 'Click to choose images, or drag them here',
+	galleryDropHere: 'Drop them here!',
+	galleryOptimizing: 'Optimizing images...',
+	galleryHint: 'Images, several at once (each optimized to about 1MB)',
+	galleryClear: 'Clear',
+	galleryRemove: (name) => `Remove ${name}`,
+	galleryCount: (count) =>
+		count === 1 ? '1 image ready to upload' : `${count} images ready to upload`
 };
 
 const KEY = Symbol.for('admin-kit-labels');
