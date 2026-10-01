@@ -29,6 +29,23 @@ describe('GalleryUpload.svelte', () => {
 		expect(Array.from(get(form).images as FileList).map((f) => f.name)).toEqual(['b.png']);
 	});
 
+	/*
+	 * The store filled while the form posted nothing: the input had no name and no files, and a
+	 * form posts its inputs, not superforms' store. What the browser would send is the check.
+	 */
+	it('posts the chosen images with the form, and not the removed ones', async () => {
+		const form = writable<Record<string, unknown>>({ images: undefined });
+		const screen = render(GalleryUpload, { form, name: 'images' });
+		const input = screen.container.querySelector<HTMLInputElement>('input[type=file]')!;
+		const posted = () => Array.from(input.files ?? []).map((file) => input.name + ':' + file.name);
+
+		await userEvent.upload(input, [await png('a.png'), await png('b.png')]);
+		await expect.poll(posted).toEqual(['images:a.png', 'images:b.png']);
+
+		await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+		await expect.poll(posted).toEqual(['images:b.png']);
+	});
+
 	it('leaves files that are not images out', async () => {
 		const form = writable<Record<string, unknown>>({ images: undefined });
 		const screen = render(GalleryUpload, { form, name: 'images' });

@@ -47,6 +47,18 @@
 	const files = filesProxy(form, name);
 	let dragging = $state(false);
 	let processing = $state(false);
+	let input = $state<HTMLInputElement>();
+
+	/*
+	 * The input is what the browser posts, so it must hold exactly the chosen files. The store
+	 * alone is not enough: a form posted the ordinary way (or by superforms from the form element)
+	 * reads the input, and an input with no files posted nothing however full the store was.
+	 * Every change — picked, dropped, compressed, removed — lands in the store first and is
+	 * copied here.
+	 */
+	$effect(() => {
+		if (input) input.files = $files ?? toFileList([]);
+	});
 
 	/* Object URLs for the previews, made once per file and revoked when it leaves. */
 	const previews = new Map<File, string>();
@@ -74,7 +86,7 @@
 		return transfer.files;
 	}
 
-	async function add(picked: FileList | null | undefined) {
+	async function add(picked: FileList | File[] | null | undefined) {
 		if (!picked?.length) return;
 		processing = true;
 		try {
@@ -155,17 +167,17 @@
 			</span>
 			<span class="block text-xs text-muted-foreground">{hint ?? L.galleryHint}</span>
 		</span>
-		<!-- No `name`: the files travel in the superforms field, not in this input. -->
 		<input
+			bind:this={input}
 			id={name}
+			{name}
 			type="file"
 			accept="image/*"
 			multiple
 			class="sr-only"
 			onchange={(event) => {
-				add(event.currentTarget.files);
-				// Cleared, so choosing the same image again still fires.
-				event.currentTarget.value = '';
+				// Copied before `add` replaces the input's files with the compressed set.
+				add(Array.from(event.currentTarget.files ?? []));
 			}}
 		/>
 	</label>
