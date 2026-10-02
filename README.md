@@ -62,6 +62,16 @@ It never overwrites a file. Re-run it by hand with `npx admin-kit setup` (`--for
 missing files to a project that already has a dashboard); skip it with `ADMIN_KIT_SKIP_SETUP=1`.
 npm hides install-script output — add `--foreground-scripts` to see the list of what it did.
 
+**On Vite 8, add the kit's plugin** to `vite.config.ts`, or the dev server prints "Failed to run
+dependency scan" and reloads the page each time it finds a dependency it could have bundled up
+front (`src/lib/vite.ts` explains why):
+
+```ts
+import { adminKit } from '@nahu/admin-kit/vite';
+
+export default defineConfig({ plugins: [tailwindcss(), sveltekit(), adminKit()] });
+```
+
 **Until you add roles**, the generated hook treats every signed-in user as a super admin. The
 comment above `kitHandle` in `hooks.server.ts` marks where real permissions go.
 
