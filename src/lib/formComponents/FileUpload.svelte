@@ -36,9 +36,10 @@
 		placeholder?: string;
 		image?: string;
 		/**
-		 * Whether the stored file can be taken off. Off for a column that must hold a file — a
-		 * brand's logo — where the ✕ could only fail the save: the file can be replaced by choosing
-		 * another, not removed.
+		 * Whether clearing the stored file takes it off the row. Off for a column that must hold a
+		 * file — a brand's logo — where posting the removal could only fail the save. The ✕ is still
+		 * there either way, since it is how the picker is reached to choose a replacement; with
+		 * this off it only reopens the picker, and the stored file stays unless another is chosen.
 		 */
 		removable?: boolean;
 		/** The file types offered: images and PDFs by default, `image/*` for a picture field. */
@@ -188,21 +189,25 @@
 						<span class="truncate text-sm font-medium">{image}</span>
 					</div>
 				</div>
-				{#if removable}
-					<Button
-						variant="ghost"
-						size="icon"
-						class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
-						aria-label={L.clear}
-						onclick={() => {
-							file.set(undefined);
-							image = '';
-							removed = true;
-						}}
-					>
-						<X class="h-4 w-4" />
-					</Button>
-				{/if}
+				<!--
+					Always shown: it is the only way from the stored file back to the picker, so hiding
+					it left a required file impossible to change. On a field that cannot be emptied it
+					only reopens the picker; nothing is posted, so the stored file stays unless another
+					is chosen.
+				-->
+				<Button
+					variant="ghost"
+					size="icon"
+					class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
+					aria-label={L.clear}
+					onclick={() => {
+						file.set(undefined);
+						image = '';
+						if (removable) removed = true;
+					}}
+				>
+					<X class="h-4 w-4" />
+				</Button>
 			</div>
 
 			<div class="overflow-hidden rounded-lg border bg-muted/30">

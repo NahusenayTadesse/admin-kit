@@ -65,8 +65,8 @@ export type LookupFieldType =
 	 *
 	 * The route lists the column in `contentCrud`'s `fileFields`, which stores the upload and keeps
 	 * the stored file when an edit uploads none; its schemas declare it `z.file()` on add and
-	 * `z.file().optional()` on edit. A field left `required` (the default) cannot be taken off,
-	 * only replaced, since its column cannot be empty.
+	 * `z.file().optional()` on edit. A field left `required` (the default) can be replaced but not
+	 * taken off, since its column cannot be empty: clearing it only reopens the picker.
 	 */
 	| 'image'
 	/** An uploaded document or image: a "View" link in the table. Otherwise as `image`. */

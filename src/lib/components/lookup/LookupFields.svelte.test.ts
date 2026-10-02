@@ -1,7 +1,8 @@
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { writable } from 'svelte/store';
+import { removeFileField } from '$lib/files';
 import LookupFields from './LookupFields.svelte';
 import type { LookupField } from './types';
 
@@ -20,27 +21,42 @@ describe('LookupFields.svelte — image fields', () => {
 	});
 
 	/*
-	 * A required image's column cannot be empty, so its ✕ could only fail the save: the stored
-	 * logo can be replaced by choosing another, not taken off.
+	 * The ✕ is the only way from the stored image back to the picker. 0.1.24 hid it on a required
+	 * image, which left the logo impossible to change; clearing must reopen the picker, but post
+	 * no removal, since the column cannot be empty.
 	 */
-	it('previews the stored image while editing, with no way to remove a required one', async () => {
-		render(LookupFields, {
+	it('lets a required image be replaced: clearing reopens the picker and removes nothing', async () => {
+		const screen = render(LookupFields, {
 			fields: [logo],
 			entity: 'Brand',
 			stored: { id: 1, logo: 'stored-logo.webp' },
 			...stores()
 		});
 		await expect.element(page.getByText('stored-logo.webp')).toBeInTheDocument();
-		expect(page.getByRole('button', { name: 'Clear' }).elements()).toHaveLength(0);
+
+		await userEvent.click(page.getByRole('button', { name: 'Clear' }));
+
+		await expect.element(page.getByText('Click to upload or drag and drop')).toBeInTheDocument();
+		expect(screen.container.querySelector(`input[name="${removeFileField('logo')}"]`)).toBeNull();
 	});
 
-	it('lets an optional one be removed', async () => {
-		render(LookupFields, {
+	it('takes an optional one off when it is cleared', async () => {
+		const screen = render(LookupFields, {
 			fields: [{ ...logo, required: false }],
 			entity: 'Brand',
 			stored: { id: 1, logo: 'stored-logo.webp' },
 			...stores()
 		});
-		await expect.element(page.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
+
+		await userEvent.click(page.getByRole('button', { name: 'Clear' }));
+
+		await expect
+			.poll(
+				() =>
+					screen.container.querySelector<HTMLInputElement>(
+						`input[name="${removeFileField('logo')}"]`
+					)?.value
+			)
+			.toBe('1');
 	});
 });
