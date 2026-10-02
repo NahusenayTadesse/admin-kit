@@ -73,4 +73,23 @@ describe('DialogComp.svelte', () => {
 		await userEvent.keyboard('{Escape}');
 		await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
 	});
+
+	/*
+	 * The trigger's props are spread onto the button last, so a class written on the button was
+	 * replaced: `triggerClass` never arrived, and the button kept `w-auto`, which a flex column
+	 * stretches to its full width.
+	 */
+	it('sizes the trigger to its label and passes triggerClass through', async () => {
+		render(DialogComp, {
+			title: 'Add New Item',
+			variant: 'default',
+			triggerClass: 'ml-auto',
+			children: textSnippet('Form')
+		});
+
+		const button = page.getByRole('button', { name: 'Add New Item' }).element();
+		expect(button.classList).toContain('w-fit');
+		expect(button.classList).toContain('ml-auto');
+		expect(button.classList).not.toContain('w-auto');
+	});
 });

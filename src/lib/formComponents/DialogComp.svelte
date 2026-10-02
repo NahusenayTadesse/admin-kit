@@ -35,12 +35,18 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Trigger class="w-auto border-0">
+	<!--
+		The trigger's class reaches the button through `props`, which are spread last and so replace
+		any class written on the button itself: `triggerClass` belongs here, or it never arrives.
+		`w-fit`, not `w-auto`: a flex column stretches every child whose width is auto, so on a page
+		laid out as a column the "Add" button ran the full width of the page.
+	-->
+	<Dialog.Trigger class="w-fit border-0 {triggerClass}">
 		{#snippet child({ props })}
 			{#if trigger}
 				{@render trigger(props)}
 			{:else}
-				<Button size="sm" class="border-0 {triggerClass}" {variant} {...props}>
+				<Button size="sm" {variant} {...props}>
 					{#if IconComp}
 						<IconComp />
 					{:else if variant === 'destructive'}
