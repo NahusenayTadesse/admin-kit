@@ -2,13 +2,17 @@ import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { writable } from 'svelte/store';
+import type { ComponentProps } from 'svelte';
 import { removeFileField } from '$lib/files';
 import LookupFields from './LookupFields.svelte';
 import type { LookupField } from './types';
 
+type Props = ComponentProps<typeof LookupFields>;
+
+/* Plain stores stand in for superforms' own, which the component only reads and writes. */
 const stores = () => ({
-	form: writable<Record<string, unknown>>({ logo: undefined }),
-	errors: writable<Record<string, unknown>>({})
+	form: writable<Record<string, unknown>>({ logo: undefined }) as unknown as Props['form'],
+	errors: writable<Record<string, unknown>>({}) as unknown as Props['errors']
 });
 
 describe('LookupFields.svelte — image fields', () => {
