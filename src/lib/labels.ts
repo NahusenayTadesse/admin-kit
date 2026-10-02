@@ -133,6 +133,13 @@ export type KitLabels = {
 	searchFor: (what: string) => string;
 	noneFound: (what: string) => string;
 	selectAll: string;
+	/** A searchable checklist: the box that narrows it, and its accessible name. */
+	checklistSearch: string;
+	checklistSearchAria: string;
+	/** "Select all" while a search narrows the list: it means all *shown*. */
+	selectAllShown: (count: number) => string;
+	checklistChosen: (count: number) => string;
+	checklistNoMatch: string;
 	ethiopianDate: string;
 	/** On a shortened text: what clicking it does (for screen readers and the tooltip). */
 	bigTextShowAll: string;
@@ -357,6 +364,11 @@ export const englishLabels: KitLabels = {
 	searchFor: (what) => `Search ${what}...`,
 	noneFound: (what) => `No ${what} found.`,
 	selectAll: 'Select All',
+	checklistSearch: 'Search…',
+	checklistSearchAria: 'Search the list',
+	selectAllShown: (count) => `Select all ${count} shown`,
+	checklistChosen: (count) => `${count} chosen`,
+	checklistNoMatch: 'Nothing matches.',
 	ethiopianDate: 'Ethiopian Date:',
 	bigTextShowAll: 'Show all',
 	dateLocale: 'en-GB',

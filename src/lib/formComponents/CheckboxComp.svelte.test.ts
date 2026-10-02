@@ -57,4 +57,49 @@ describe('CheckboxComp.svelte', () => {
 		await expect.element(checkboxes.nth(2)).not.toBeChecked();
 		await expect.element(checkboxes.nth(3)).not.toBeChecked();
 	});
+
+	describe('searchable', () => {
+		const box = (name: string) => page.getByRole('checkbox', { name, exact: true });
+
+		it('narrows the list as the search is typed, and says when nothing matches', async () => {
+			render(CheckboxComp, { items, checkedValues: [], searchable: true });
+
+			await userEvent.fill(page.getByRole('searchbox', { name: 'Search the list' }), 'an');
+			await expect.element(page.getByText('Bananas')).toBeInTheDocument();
+			await expect.element(page.getByText('Apples')).not.toBeInTheDocument();
+
+			await userEvent.fill(page.getByRole('searchbox', { name: 'Search the list' }), 'zzz');
+			await expect.element(page.getByText('Nothing matches.')).toBeInTheDocument();
+		});
+
+		/*
+		 * The rule that matters: narrowing the view must never quietly untick someone, so "Select
+		 * all" adds the shown items to what was already ticked, and a ticked item the search hides
+		 * is still ticked when the search is cleared.
+		 */
+		it('selects all shown and keeps hidden ticks', async () => {
+			render(CheckboxComp, { items, checkedValues: [1], searchable: true });
+			await expect.element(page.getByText('1 chosen')).toBeInTheDocument();
+
+			await userEvent.fill(page.getByRole('searchbox', { name: 'Search the list' }), 'an');
+			await userEvent.click(page.getByText('Select all 1 shown'));
+			await expect.element(page.getByText('2 chosen')).toBeInTheDocument();
+
+			await userEvent.fill(page.getByRole('searchbox', { name: 'Search the list' }), '');
+			await expect.element(box('Apples')).toBeChecked();
+			await expect.element(box('Bananas')).toBeChecked();
+			await expect.element(box('Cherries')).not.toBeChecked();
+		});
+
+		it('gives two checklists on a page ids of their own', async () => {
+			render(CheckboxComp, { items, checkedValues: [], id: 'first' });
+			render(CheckboxComp, { items, checkedValues: [], id: 'second' });
+
+			const ids = page
+				.getByRole('checkbox')
+				.elements()
+				.map((el) => el.id);
+			expect(new Set(ids).size).toBe(ids.length);
+		});
+	});
 });
