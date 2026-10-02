@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { RangeCalendar as RangeCalendarPrimitive } from 'bits-ui';
-	import * as RangeCalendar from './index.js';
+	// Not `* as RangeCalendar`: the packaged .d.ts would then declare two `RangeCalendar`s, and an app importing
+	// this component gets TypeScript's "Cannot access ambient const enums" error.
+	import * as Parts from './index.js';
 	import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
 	import type { ButtonVariant } from '$lib/components/ui/button/index.js';
 	import type { Snippet } from 'svelte';
@@ -111,15 +113,15 @@
 	{...restProps}
 >
 	{#snippet children({ months, weekdays })}
-		<RangeCalendar.Months>
-			<RangeCalendar.Nav>
-				<RangeCalendar.PrevButton variant={buttonVariant} />
-				<RangeCalendar.NextButton variant={buttonVariant} />
-			</RangeCalendar.Nav>
+		<Parts.Months>
+			<Parts.Nav>
+				<Parts.PrevButton variant={buttonVariant} />
+				<Parts.NextButton variant={buttonVariant} />
+			</Parts.Nav>
 			{#each months as month, monthIndex (month)}
-				<RangeCalendar.Month>
-					<RangeCalendar.Header>
-						<RangeCalendar.Caption
+				<Parts.Month>
+					<Parts.Header>
+						<Parts.Caption
 							{captionLayout}
 							months={shownMonths}
 							{monthFormat}
@@ -130,39 +132,39 @@
 							locale={shownLocale}
 							{monthIndex}
 						/>
-					</RangeCalendar.Header>
+					</Parts.Header>
 
-					<RangeCalendar.Grid>
-						<RangeCalendar.GridHead>
-							<RangeCalendar.GridRow class="select-none">
+					<Parts.Grid>
+						<Parts.GridHead>
+							<Parts.GridRow class="select-none">
 								{#each weekdays as weekday (weekday)}
-									<RangeCalendar.HeadCell>
+									<Parts.HeadCell>
 										{weekday.slice(0, 2)}
-									</RangeCalendar.HeadCell>
+									</Parts.HeadCell>
 								{/each}
-							</RangeCalendar.GridRow>
-						</RangeCalendar.GridHead>
-						<RangeCalendar.GridBody>
+							</Parts.GridRow>
+						</Parts.GridHead>
+						<Parts.GridBody>
 							{#each month.weeks as weekDates (weekDates)}
-								<RangeCalendar.GridRow class="mt-2 w-full">
+								<Parts.GridRow class="mt-2 w-full">
 									{#each weekDates as date (date)}
-										<RangeCalendar.Cell {date} month={month.value}>
+										<Parts.Cell {date} month={month.value}>
 											{#if day}
 												{@render day({
 													day: date,
 													outsideMonth: !isEqualMonth(date, month.value)
 												})}
 											{:else}
-												<RangeCalendar.Day />
+												<Parts.Day />
 											{/if}
-										</RangeCalendar.Cell>
+										</Parts.Cell>
 									{/each}
-								</RangeCalendar.GridRow>
+								</Parts.GridRow>
 							{/each}
-						</RangeCalendar.GridBody>
-					</RangeCalendar.Grid>
-				</RangeCalendar.Month>
+						</Parts.GridBody>
+					</Parts.Grid>
+				</Parts.Month>
 			{/each}
-		</RangeCalendar.Months>
+		</Parts.Months>
 	{/snippet}
 </RangeCalendarPrimitive.Root>
