@@ -18,6 +18,7 @@
 		title = undefined,
 		message = '',
 		name = 'acknowledgeRisk',
+		confirmLabel = undefined,
 		checked = $bindable(false)
 	}: {
 		/** Only render when the entry is actually risky. */
@@ -26,6 +27,11 @@
 		message?: string;
 		/** Form field name posted alongside the rest of the form. */
 		name?: string;
+		/**
+		 * What ticking the box says. The default is about money; a prescriber confirming an allergy
+		 * clash is not taking a money risk.
+		 */
+		confirmLabel?: string;
 		checked?: boolean;
 	} = $props();
 
@@ -46,7 +52,7 @@
 		{/if}
 		<label class="mt-1 flex items-center gap-2 text-sm font-medium">
 			<Checkbox bind:checked aria-label={title ?? L.riskCheckFirst} />
-			{L.riskConfirm}
+			{confirmLabel ?? L.riskConfirm}
 		</label>
 		<!--
 			Rendered only when ticked, never as value="false". A string "false" is

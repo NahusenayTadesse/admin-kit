@@ -27,6 +27,7 @@
 		image = '',
 		removable = true,
 		accept = 'image/*,application/pdf',
+		compress = true,
 		// The prompts, for an app that shows this in another language. English by default.
 		labels = {}
 	}: {
@@ -44,6 +45,11 @@
 		removable?: boolean;
 		/** The file types offered: images and PDFs by default, `image/*` for a picture field. */
 		accept?: string;
+		/**
+		 * Shrink an image to about 1MB before it is sent. Off where the detail is the point — a
+		 * radiograph, a scanned signature — and the file must arrive as it was taken.
+		 */
+		compress?: boolean;
 		labels?: { prompt?: string; dropHere?: string; optimizing?: string };
 	} = $props();
 
@@ -84,7 +90,7 @@
 		try {
 			const processedFiles = await Promise.all(
 				Array.from(files).map(async (f) => {
-					if (f.type === 'application/pdf') return f;
+					if (f.type === 'application/pdf' || !compress) return f;
 					try {
 						const compressed = await imageCompression(f, options);
 						// ✅ Convert Blob → File, preserving the original filename

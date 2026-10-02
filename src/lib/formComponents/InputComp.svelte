@@ -105,6 +105,7 @@
 		image = '',
 		removable = true,
 		accept = undefined,
+		compress = true,
 		disabled = false,
 		id = undefined,
 		description = undefined,
@@ -134,6 +135,8 @@
 		removable?: boolean;
 		/** `file` only: the file types offered, `image/*` for a picture. */
 		accept?: string;
+		/** `file` only: shrink an image before upload (see `FileUpload`). */
+		compress?: boolean;
 		disabled?: boolean;
 		/** Defaults to `name`, which is unique within a form. Set it when two forms share a page. */
 		id?: string;
@@ -204,7 +207,7 @@
 			aria-describedby={describedBy}
 		/>
 	{:else if type === 'file'}
-		<FileUpload {name} {form} {image} {placeholder} {removable} {accept} />
+		<FileUpload {name} {form} {image} {placeholder} {removable} {accept} {compress} />
 	{:else if type === 'select'}
 		<SelectComp
 			{name}
