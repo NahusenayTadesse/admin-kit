@@ -103,6 +103,8 @@
 		year = false,
 		futureDays = false,
 		image = '',
+		removable = true,
+		accept = undefined,
 		disabled = false,
 		id = undefined,
 		description = undefined,
@@ -128,6 +130,10 @@
 		year?: boolean;
 		futureDays?: boolean;
 		image?: string;
+		/** `file` only: whether the stored file can be taken off (see `FileUpload`). */
+		removable?: boolean;
+		/** `file` only: the file types offered, `image/*` for a picture. */
+		accept?: string;
 		disabled?: boolean;
 		/** Defaults to `name`, which is unique within a form. Set it when two forms share a page. */
 		id?: string;
@@ -198,7 +204,7 @@
 			aria-describedby={describedBy}
 		/>
 	{:else if type === 'file'}
-		<FileUpload {name} {form} {image} {placeholder} />
+		<FileUpload {name} {form} {image} {placeholder} {removable} {accept} />
 	{:else if type === 'select'}
 		<SelectComp
 			{name}

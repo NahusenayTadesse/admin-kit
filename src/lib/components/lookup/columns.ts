@@ -8,6 +8,7 @@ import Statuses from '$lib/components/Table/statuses.svelte';
 import BigText from '$lib/components/Table/bigText.svelte';
 import DeleteEntity from '$lib/components/DeleteEntity.svelte';
 import LookupEdit from './LookupEdit.svelte';
+import LookupFileCell from './LookupFileCell.svelte';
 import { formatETB, formatEthiopianDate } from '$lib/global';
 import type { createForm } from '$lib/forms/createForm';
 import type { LookupConfig, LookupField, LookupOptions, LookupRow } from './types';
@@ -136,6 +137,21 @@ export function lookupColumns(
 						accessorFn: (row) => shown(field, row),
 						header: sortableHeader(field.label),
 						cell: ({ getValue }) => String(getValue() ?? '')
+					};
+				}
+
+				// The stored file itself, not its generated name: a thumbnail, or a link to open it.
+				if (field.type === 'image' || field.type === 'file') {
+					return {
+						id: field.name,
+						header: field.label,
+						enableSorting: false,
+						cell: ({ row }) =>
+							renderComponent(LookupFileCell, {
+								name: String(row.original[field.name] ?? ''),
+								image: field.type === 'image',
+								alt: String(shown(labelField, row.original) ?? '')
+							})
 					};
 				}
 

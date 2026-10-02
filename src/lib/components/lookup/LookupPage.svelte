@@ -10,7 +10,7 @@
 	import LookupFields from './LookupFields.svelte';
 	import { lookupColumns } from './columns';
 	import { createForm } from '$lib/forms/createForm';
-	import type { LookupConfig, LookupOptions, LookupRow } from './types';
+	import { isFileField, type LookupConfig, type LookupOptions, type LookupRow } from './types';
 	import type { LookupForm, LookupSchema } from './columns';
 
 	/**
@@ -72,6 +72,9 @@
 		) as LookupOptions
 	);
 
+	/** An upload cannot travel in a urlencoded post. */
+	const multipart = $derived(config.fields.some(isFileField));
+
 	const L = useLabels();
 	const columns = $derived(
 		lookupColumns(config, {
@@ -90,7 +93,14 @@
 
 {#if !config.fixedRows}
 	<DialogComp bind:open title={L.lookupAddNewTitle(config.entity)} variant="default">
-		<form action="?/add" use:enhance id="main" class="flex flex-col gap-4" method="post">
+		<form
+			action="?/add"
+			use:enhance
+			id="main"
+			class="flex flex-col gap-4"
+			method="post"
+			enctype={multipart ? 'multipart/form-data' : undefined}
+		>
 			<Errors allErrors={$allErrors} />
 			<LookupFields fields={config.fields} {form} {errors} entity={config.entity} {options} />
 

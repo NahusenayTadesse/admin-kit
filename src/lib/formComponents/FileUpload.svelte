@@ -25,6 +25,8 @@
 		name,
 		placeholder = undefined,
 		image = '',
+		removable = true,
+		accept = 'image/*,application/pdf',
 		// The prompts, for an app that shows this in another language. English by default.
 		labels = {}
 	}: {
@@ -33,6 +35,14 @@
 		name: string;
 		placeholder?: string;
 		image?: string;
+		/**
+		 * Whether the stored file can be taken off. Off for a column that must hold a file — a
+		 * brand's logo — where the ✕ could only fail the save: the file can be replaced by choosing
+		 * another, not removed.
+		 */
+		removable?: boolean;
+		/** The file types offered: images and PDFs by default, `image/*` for a picture field. */
+		accept?: string;
 		labels?: { prompt?: string; dropHere?: string; optimizing?: string };
 	} = $props();
 
@@ -118,7 +128,7 @@
 		class="hidden"
 		bind:files={$file}
 		{name}
-		accept="image/*,application/pdf"
+		{accept}
 		onchange={(e) => handleFileSelection(e.currentTarget.files)}
 		multiple={false}
 	/>
@@ -178,19 +188,21 @@
 						<span class="truncate text-sm font-medium">{image}</span>
 					</div>
 				</div>
-				<Button
-					variant="ghost"
-					size="icon"
-					class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
-					aria-label={L.clear}
-					onclick={() => {
-						file.set(undefined);
-						image = '';
-						removed = true;
-					}}
-				>
-					<X class="h-4 w-4" />
-				</Button>
+				{#if removable}
+					<Button
+						variant="ghost"
+						size="icon"
+						class="hover:text-destructive-foreground h-8 w-8 rounded-full hover:bg-destructive"
+						aria-label={L.clear}
+						onclick={() => {
+							file.set(undefined);
+							image = '';
+							removed = true;
+						}}
+					>
+						<X class="h-4 w-4" />
+					</Button>
+				{/if}
 			</div>
 
 			<div class="overflow-hidden rounded-lg border bg-muted/30">

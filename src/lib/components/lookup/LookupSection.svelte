@@ -10,7 +10,7 @@
 	import Errors from '$lib/formComponents/Errors.svelte';
 	import LookupFields from './LookupFields.svelte';
 	import { lookupColumns, type LookupForm, type LookupSchema } from './columns';
-	import type { LookupConfig, LookupOptions, LookupRow } from './types';
+	import { isFileField, type LookupConfig, type LookupOptions, type LookupRow } from './types';
 
 	/**
 	 * One child table on a detail page — the rows a single parent owns.
@@ -64,6 +64,9 @@
 		}
 	});
 
+	/** An upload cannot travel in a urlencoded post. */
+	const multipart = $derived(config.fields.some(isFileField));
+
 	const L = useLabels();
 	const columns = $derived(
 		lookupColumns(config, {
@@ -92,6 +95,7 @@
 				id={actions.add}
 				class="flex flex-col gap-4"
 				method="post"
+				enctype={multipart ? 'multipart/form-data' : undefined}
 			>
 				<Errors allErrors={$allErrors} />
 				<LookupFields fields={config.fields} {form} {errors} entity={config.entity} {options} />

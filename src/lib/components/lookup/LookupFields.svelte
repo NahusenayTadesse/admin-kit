@@ -2,7 +2,7 @@
 	import { useLabels } from '$lib/labels';
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 	import type { SuperForm } from 'sveltekit-superforms';
-	import type { LookupField, LookupOptions } from './types';
+	import type { LookupField, LookupOptions, LookupRow } from './types';
 
 	/**
 	 * The field list of a lookup form, rendered from its descriptor.
@@ -15,7 +15,8 @@
 		form,
 		errors,
 		entity,
-		options
+		options,
+		stored
 	}: {
 		fields: LookupField[];
 		/** The superForm stores, passed straight through to `InputComp`. */
@@ -25,6 +26,11 @@
 		entity: string;
 		/** Options for every `reference` field, keyed by field name. See `LookupPage`. */
 		options?: LookupOptions;
+		/**
+		 * The row being edited, for the stored file an `image`/`file` field previews. Absent in the
+		 * add dialog, where there is nothing stored yet.
+		 */
+		stored?: LookupRow;
 	} = $props();
 
 	const visible = $derived(fields.filter((f) => f.inForm !== false));
@@ -86,6 +92,19 @@
 			type="checkboxSingle"
 			placeholder={field.placeholder ?? field.label}
 			required={field.required ?? true}
+		/>
+	{:else if field.type === 'image' || field.type === 'file'}
+		<InputComp
+			{form}
+			{errors}
+			label={field.label}
+			name={field.name}
+			type="file"
+			image={String(stored?.[field.name] ?? '')}
+			removable={!(field.required ?? true)}
+			accept={field.type === 'image' ? 'image/*' : undefined}
+			placeholder={field.placeholder}
+			required={(field.required ?? true) && !stored?.[field.name]}
 		/>
 	{:else if field.type === 'textarea'}
 		<InputComp

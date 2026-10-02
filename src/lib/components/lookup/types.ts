@@ -58,7 +58,23 @@ export type LookupFieldType =
 	 * change only when the schema does. Using `reference` for an enum would promise the admin
 	 * panel can extend it, which it cannot.
 	 */
-	| 'select';
+	| 'select'
+	/**
+	 * An uploaded image — a logo, a photo. A thumbnail in the table; in the forms the kit's upload
+	 * field, showing the stored image while editing, accepting images only.
+	 *
+	 * The route lists the column in `contentCrud`'s `fileFields`, which stores the upload and keeps
+	 * the stored file when an edit uploads none; its schemas declare it `z.file()` on add and
+	 * `z.file().optional()` on edit. A field left `required` (the default) cannot be taken off,
+	 * only replaced, since its column cannot be empty.
+	 */
+	| 'image'
+	/** An uploaded document or image: a "View" link in the table. Otherwise as `image`. */
+	| 'file';
+
+/** Whether a field holds an upload, so its form must post as multipart. */
+export const isFileField = (field: { type: LookupFieldType }) =>
+	field.type === 'image' || field.type === 'file';
 
 export type LookupField = {
 	/** The column on the table and the key in the form. */

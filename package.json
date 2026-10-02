@@ -1,6 +1,6 @@
 {
 	"name": "@nahu/admin-kit",
-	"version": "0.1.23",
+	"version": "0.1.24",
 	"private": true,
 	"description": "The dashboard, table, form, filter, CRUD and file-storage pieces shared across my SvelteKit projects.",
 	"type": "module",

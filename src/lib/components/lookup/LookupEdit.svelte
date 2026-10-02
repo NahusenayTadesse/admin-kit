@@ -9,7 +9,7 @@
 	import Messages from '$lib/formComponents/Messages.svelte';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
 	import LookupFields from './LookupFields.svelte';
-	import type { LookupField, LookupOptions, LookupRow } from './types';
+	import { isFileField, type LookupField, type LookupOptions, type LookupRow } from './types';
 	import type { LookupForm, LookupSchema } from './columns';
 
 	/**
@@ -72,7 +72,12 @@
 	 * row — there is nothing here for a `$derived` to track.
 	 */
 	$form.id = row.id;
-	for (const field of fields) $form[field.name] = row[field.name];
+	// Not a file field: it holds an upload, and the row's stored file name is not one. The stored
+	// file is shown as the field's preview instead, and kept unless a new one is chosen.
+	for (const field of fields) if (!isFileField(field)) $form[field.name] = row[field.name];
+
+	/** An upload cannot travel in a urlencoded post. */
+	const multipart = $derived(fields.some(isFileField));
 
 	/*
 	 * Unique per row and per action. Every dialog here used `id="edit"`, and the submit button
@@ -108,12 +113,19 @@
 		</Button>
 	{/snippet}
 
-	<form {action} use:enhance method="post" id={formId} class="flex w-full flex-col gap-4 p-4">
+	<form
+		{action}
+		use:enhance
+		method="post"
+		enctype={multipart ? 'multipart/form-data' : undefined}
+		id={formId}
+		class="flex w-full flex-col gap-4 p-4"
+	>
 		<Errors allErrors={$allErrors} />
 		<input type="hidden" name="id" value={$form.id} />
 		<Messages {message} />
 
-		<LookupFields {fields} {form} {errors} {entity} {options} />
+		<LookupFields {fields} {form} {errors} {entity} {options} stored={row} />
 
 		<Button type="submit" class="mt-4" form={formId}>
 			{#if $delayed}

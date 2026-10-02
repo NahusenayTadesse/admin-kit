@@ -75,6 +75,8 @@ export type KitLabels = {
 	lookupAdd: (entity: string) => string;
 	lookupAddNewTitle: (entity: string) => string;
 	lookupAddTitle: (entity: string) => string;
+	/** The link to an uploaded file in a lookup table. */
+	lookupFileView: string;
 	lookupAdding: (entity: string) => string;
 	lookupEdit: string;
 	lookupEditTitle: (title: string) => string;
@@ -298,6 +300,7 @@ export const englishLabels: KitLabels = {
 	lookupAdd: (entity) => `Add ${entity}`,
 	lookupAddNewTitle: (entity) => `+ Add New ${entity}`,
 	lookupAddTitle: (entity) => `+ Add ${entity}`,
+	lookupFileView: 'View',
 	lookupAdding: (entity) => `Adding ${entity}`,
 	lookupEdit: 'Edit',
 	lookupEditTitle: (title) => `Edit ${title}`,

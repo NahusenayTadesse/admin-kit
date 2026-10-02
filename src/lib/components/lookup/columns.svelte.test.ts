@@ -103,3 +103,35 @@ describe('long text', () => {
 		expect(address.props).toEqual({ text: 'Bole Road', max: 30 });
 	});
 });
+
+describe('uploads', () => {
+	const c: LookupConfig = {
+		entity: 'Brand',
+		plural: 'Brands',
+		fields: [
+			{ name: 'name', label: 'Name', type: 'text' },
+			{ name: 'logo', label: 'Logo', type: 'image' },
+			{ name: 'brief', label: 'Brief', type: 'file', required: false }
+		]
+	};
+	const cellOf = (key: string, row: Record<string, unknown>) => {
+		const col = lookupColumns(c, { editForm: form }).find(
+			(x) => ('accessorKey' in x ? x.accessorKey : x.id) === key
+		)!;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return (col.cell as any)({ row: { original: row } });
+	};
+
+	it('shows an image as a thumbnail named after the row, and a file as a link', () => {
+		expect(cellOf('logo', { name: 'Samsung', logo: 'a.webp' }).props).toEqual({
+			name: 'a.webp',
+			image: true,
+			alt: 'Samsung'
+		});
+		expect(cellOf('brief', { name: 'Samsung', brief: null }).props).toEqual({
+			name: '',
+			image: false,
+			alt: 'Samsung'
+		});
+	});
+});
