@@ -8,6 +8,7 @@
 		CloudUpload as UploadCloud,
 		FileText,
 		Image as ImageIcon,
+		File as FileIcon,
 		Loader
 	} from '@lucide/svelte';
 	import { fileProxy } from 'sveltekit-superforms';
@@ -43,7 +44,10 @@
 		 * this off it only reopens the picker, and the stored file stays unless another is chosen.
 		 */
 		removable?: boolean;
-		/** The file types offered: images and PDFs by default, `image/*` for a picture field. */
+		/**
+		 * The file types offered: images and PDFs by default, `image/*` for a picture field. Anything
+		 * else — a spreadsheet, `.xlsx,.csv` — is shown by name and size, with no preview.
+		 */
 		accept?: string;
 		/**
 		 * Shrink an image to about 1MB before it is sent. Off where the detail is the point — a
@@ -61,6 +65,15 @@
 	});
 
 	let file = $state(fileProxy(form, name));
+
+	/*
+	 * What the chosen file is, for the preview. Only an image or a PDF can be drawn; anything else
+	 * was handed to an `<img>` and showed as a broken picture, under "(Optimized)" though nothing
+	 * had been done to it.
+	 */
+	const chosen = $derived($file?.[0]);
+	const isPdf = $derived(chosen?.type === 'application/pdf');
+	const isImage = $derived(Boolean(chosen?.type.startsWith('image/')));
 	let isDragging = $state(false);
 	let isProcessing = $state(false);
 
@@ -234,16 +247,19 @@
 					<div
 						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
 					>
-						{#if $file[0]?.type === 'application/pdf'}
+						{#if isPdf}
 							<FileText class="h-5 w-5" />
-						{:else}
+						{:else if isImage}
 							<ImageIcon class="h-5 w-5" />
+						{:else}
+							<FileIcon class="h-5 w-5" />
 						{/if}
 					</div>
 					<div class="flex flex-col truncate">
-						<span class="truncate text-sm font-medium">{$file[0]?.name}</span>
+						<span class="truncate text-sm font-medium">{chosen?.name}</span>
 						<span class="text-xs text-muted-foreground">
-							{($file[0]?.size / 1024 / 1024).toFixed(2)} MB {L.uploadOptimized}
+							{((chosen?.size ?? 0) / 1024 / 1024).toFixed(2)} MB
+							{#if isImage && compress}{L.uploadOptimized}{/if}
 						</span>
 					</div>
 				</div>
@@ -258,24 +274,24 @@
 				</Button>
 			</div>
 
-			<div class="overflow-hidden rounded-lg border bg-muted/30">
-				{#if $file[0]}
-					{#if $file[0]?.type === 'application/pdf'}
+			{#if chosen && (isPdf || isImage)}
+				<div class="overflow-hidden rounded-lg border bg-muted/30">
+					{#if isPdf}
 						<iframe
-							src={URL.createObjectURL($file[0]) + '#toolbar=0'}
+							src={URL.createObjectURL(chosen) + '#toolbar=0'}
 							class="h-64 w-full"
 							frameborder="0"
 							title="pdf-preview"
 						></iframe>
 					{:else}
 						<img
-							src={URL.createObjectURL($file[0])}
+							src={URL.createObjectURL(chosen)}
 							class="max-h-80 w-full object-contain"
 							alt={L.preview}
 						/>
 					{/if}
-				{/if}
-			</div>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

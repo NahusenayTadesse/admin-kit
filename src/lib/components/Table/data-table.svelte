@@ -97,13 +97,9 @@
 		/** Rows per page in client mode, and the initial size offered in server mode. */
 		defaultPageSize?: number;
 		/**
-		 * How tall the whole table is, as a CSS length.
-		 *
-		 * The body was capped at `45vh` and the page scrolled past it, so on any normal screen
-		 * half the window was empty while the rows had their own little scrollbar. The table now
-		 * claims a height and divides it: toolbar and pager take what they need, the rows take
-		 * the rest. An inline style rather than a class because the value is a prop, and a
-		 * Tailwind arbitrary class built from one is not in the stylesheet.
+		 * Optional explicit height for the whole table, as a CSS length.
+		 * By default, the table fits its content up to the variant's maximum height
+		 * (80vh for lists). Toolbar and pager stay visible while the rows scroll.
 		 */
 		height?: string;
 		pageSizes?: number[];
@@ -199,7 +195,9 @@
 	} as const;
 	const showSearch = $derived(search ?? VARIANTS[variant].search);
 	const pages = $derived(paginate ?? VARIANTS[variant].paginate);
-	const frameHeight = $derived(height ?? VARIANTS[variant].height);
+	const frameMaxHeight = $derived(
+		height !== undefined || VARIANTS[variant].height === 'auto' ? 'none' : VARIANTS[variant].height
+	);
 	const startPageSize = $derived(defaultPageSize ?? VARIANTS[variant].pageSize);
 
 	const isServer = $derived(Boolean(server));
@@ -524,13 +522,17 @@
 		{/if}
 	</table>
 {:else}
-	<div class="mt-4 w-full {className}" style="height: {frameHeight}" data-testid="table-frame">
+	<div
+		class="mt-4 flex w-full flex-col {className}"
+		style="height: {height ?? 'auto'}; max-height: {frameMaxHeight}"
+		data-testid="table-frame"
+	>
 		<!--
 		`min-h-0` on every flex child that scrolls: a flex item's default `min-height: auto` refuses
-		to shrink below its content, so without it the rows push the container past the declared
+		to shrink below its content, so without it the rows push the container past the maximum
 		height and the page scrolls instead of the table.
 	-->
-		<div class="flex h-full min-h-0 flex-col gap-2 p-2">
+		<div class="flex min-h-0 flex-auto flex-col gap-2 p-2">
 			{#if showSearch}
 				<ScrollArea orientation="horizontal" class="shrink-0 rounded-md border">
 					<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
@@ -606,7 +608,7 @@
 				</ScrollArea>
 			{/if}
 
-			<div class="flex min-h-0 flex-1 flex-col rounded-md border">
+			<div class="flex min-h-0 flex-auto flex-col rounded-md border">
 				{#if canChart && chartsOpen}
 					<!-- Above the rows and below the toolbar: it pushes the table down rather than
 					     squeezing it sideways, so no column is hidden to make room for it. -->
@@ -620,7 +622,7 @@
 					</div>
 				{/if}
 
-				<div class="min-h-0 flex-1 overflow-auto">
+				<div class="min-h-0 flex-auto overflow-auto">
 					<Table.Root class="relative">
 						<Table.Header
 							class="sticky top-0 z-10 bg-background shadow-[inset_0_-1px_0_var(--border)]"

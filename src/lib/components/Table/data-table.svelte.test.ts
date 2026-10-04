@@ -298,16 +298,6 @@ describe('data-table.svelte', () => {
 	});
 
 	/*
-	 * The body used to be capped at `max-h-[45vh]` while the page scrolled past it, so half the
-	 * window sat empty and the rows had their own small scrollbar inside it. The table now claims
-	 * a height and divides it between the toolbar, the rows and the pager.
-	 *
-	 * Only the declared height is asserted, not the flex behaviour that divides it: these browser
-	 * tests load no stylesheet, so every Tailwind utility is absent and every element computes as
-	 * `display: block`. A layout assertion here would pass or fail for reasons unrelated to the
-	 * layout. The height is an inline style, so it is real either way.
-	 */
-	/*
 	 * The chart used to sit in a pane beside the table, which narrowed every column permanently to
 	 * make room for something most readers were not looking at — on the employees list it clipped
 	 * the status column outright. It is a toggle now, and it opens above the rows rather than
@@ -349,11 +339,12 @@ describe('data-table.svelte', () => {
 		expect((frame as HTMLElement).clientHeight).toBe(400);
 	});
 
-	it('defaults to 80vh rather than a fixed row area', async () => {
+	it('fits content by default with an 80vh maximum', async () => {
 		const screen = renderTable({ data: manyRows, columns });
 
 		const frame = screen.container.querySelector('[data-testid="table-frame"]');
-		expect(frame?.getAttribute('style')).toContain('height: 80vh');
+		expect((frame as HTMLElement).style.height).toBe('auto');
+		expect((frame as HTMLElement).style.maxHeight).toBe('80vh');
 	});
 
 	it('offers Print and Export to CSV actions in the export menu', async () => {

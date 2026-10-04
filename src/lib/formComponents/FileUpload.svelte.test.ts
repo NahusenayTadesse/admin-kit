@@ -65,6 +65,24 @@ describe('FileUpload.svelte', () => {
 		await expect.poll(() => stored(form)?.size, { timeout: 15_000 }).toBeLessThan(original.size);
 	});
 
+	/*
+	 * A spreadsheet went to an `<img>` and showed as a broken picture labelled "(Optimized)",
+	 * though nothing had been done to it.
+	 */
+	it('names a file it cannot draw, without a preview', async () => {
+		const form = writable<Record<string, unknown>>({ sheet: undefined });
+		const screen = render(FileUpload, { form, name: 'sheet', accept: '.xlsx,.csv' });
+		const zone = page.getByText('Click to upload or drag and drop').element().closest('label')!;
+		const data = new DataTransfer();
+		data.items.add(new File(['name,phone\n'], 'patients.csv', { type: 'text/csv' }));
+		zone.dispatchEvent(new DragEvent('drop', { dataTransfer: data, bubbles: true }));
+
+		await expect.element(screen.getByText('patients.csv')).toBeInTheDocument();
+		expect(screen.container.querySelector('img, iframe')).toBeNull();
+		expect(screen.container.textContent).not.toContain('(Optimized)');
+		expect((get(form).sheet as File | undefined)?.name).toBe('patients.csv');
+	});
+
 	it('sends an image exactly as chosen when compress is off — a radiograph keeps its detail', async () => {
 		const form = writable<Record<string, unknown>>({ photo: undefined });
 		render(FileUpload, { form, name: 'photo', compress: false });
