@@ -1,0 +1,6 @@
+/*
+ * --- Font: Inter from Google Fonts ---
+ * The one web font the kit loads. Kept in its own file so an app that ships its own font can
+ * import `theme.base.css` instead and make no request to Google (see `theme.base.css`).
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');

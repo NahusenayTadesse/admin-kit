@@ -23,7 +23,6 @@
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 
@@ -534,12 +533,16 @@
 	-->
 		<div class="flex min-h-0 flex-auto flex-col gap-2 p-2">
 			{#if showSearch}
-				<ScrollArea orientation="horizontal" class="shrink-0 rounded-md border">
-					<div class="flex max-w-4xl flex-row items-center justify-start gap-2 p-4">
+				<div class="shrink-0 overflow-x-auto rounded-md border">
+					<!-- On a phone the buttons wrap under the search box (a swipe-to-find toolbar hides its own
+					     filters and export); from `sm` up it is one scrolling row, as before. -->
+					<div
+						class="flex max-w-4xl flex-row flex-wrap items-center justify-start gap-2 p-3 sm:flex-nowrap sm:p-4"
+					>
 						<Input
 							type="search"
 							placeholder={isServer ? L.tableSearchServer : L.tableSearch}
-							class="w-64 lg:w-xl"
+							class="w-full sm:w-64 lg:w-xl"
 							bind:value={
 								() => (isServer ? serverSearch : globalFilter),
 								(v: string) => (isServer ? (serverSearch = v) : (globalFilter = v))
@@ -550,7 +553,7 @@
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger>
 								{#snippet child({ props })}
-									<Button {...props} variant="outline" class="ml-auto">
+									<Button {...props} variant="outline" class="sm:ml-auto">
 										{L.tableColumns}
 										<ChevronDownIcon class="size-5" />
 									</Button>
@@ -605,7 +608,7 @@
 							{L.tableResults(pagerTotal.toLocaleString())}
 						</Button>
 					</div>
-				</ScrollArea>
+				</div>
 			{/if}
 
 			<div class="flex min-h-0 flex-auto flex-col rounded-md border">

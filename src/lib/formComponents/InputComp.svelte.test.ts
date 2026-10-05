@@ -114,7 +114,7 @@ describe('InputComp.svelte', () => {
 		expect(get(form).description).toBe('Some notes');
 	});
 
-	it('renders a select for type="select" and updates the form store on choice', async () => {
+	it('renders a combobox for type="select" and updates the form store on choice', async () => {
 		const form = writable<Record<string, unknown>>({ status: '' });
 		const errors = writable<Record<string, unknown>>({});
 		const items = [
@@ -124,7 +124,7 @@ describe('InputComp.svelte', () => {
 
 		render(InputComp, { label: 'Status', form, errors, type: 'select', name: 'status', items });
 
-		await userEvent.click(page.getByRole('button'));
+		await userEvent.click(page.getByRole('combobox'));
 		await userEvent.click(page.getByRole('option', { name: 'Active', exact: true }));
 
 		expect(get(form).status).toBe(true);

@@ -197,7 +197,45 @@ Ethiopian one. Conversion is exact (`src/lib/calendars.ts`, on `@internationaliz
 - For code: `formatDateIn(value, kind, locale)`, `partsOf`, `fromParts`, `monthNames`,
   `inCalendar`, `toGregorian` and `isoDate` in `@nahu/admin-kit/calendars`.
 
+## Theme variants and fonts
+
+`styles/theme.css` is the kit's full look: Tailwind, colours, typography, and **Inter loaded from
+Google Fonts**. An app that ships its own font imports **`styles/theme.base.css`** instead, the same
+theme without the web font, so no request goes to Google and the app's own font is used:
+
+```css
+@import '@nahu/admin-kit/styles/theme.base.css';
+@font-face {
+	font-family: 'My Font';
+	src: url(/fonts/my-font.woff2) format('woff2');
+	font-display: swap;
+}
+:root {
+	--kit-font-sans: 'My Font', ui-sans-serif, system-ui, sans-serif;
+}
+```
+
+`--kit-font-head` and `--kit-font-body` default to `--kit-font-sans`; set them for a different
+heading or body face. With none set, the kit's text is Inter if installed, else the system's
+sans-serif. Colours and radius are plain variables (`--primary`, `--radius`, …) to redefine after
+the import, in `:root` and `.dark`. `theme.css` is simply `fonts.css` plus `theme.base.css`.
+
+The kit also styles bare `h1`–`h4` and `p` (application-sized, in `--font-head` / `--font-body`).
+Those rules are unlayered, so they beat Tailwind utilities such as `text-5xl` or `font-medium` on
+the same element. Mark the root of a part of the app that has its own typography, a public
+storefront for example, with **`data-site-type`**, and the kit's heading and paragraph rules
+skip that whole subtree, leaving it to the app's own CSS and utilities:
+
+```svelte
+<div class="store" data-site-type>…</div>
+```
+
+Anything portalled out of that subtree (a sheet, a dialog) needs the attribute on its own root.
+
 ## Updating a project to a newer kit
+
+To update all portfolio apps at once, run `npm run update:projects -- --check`. See
+[UPDATE-PROJECTS.md](UPDATE-PROJECTS.md) for the project list, selected updates, and usage.
 
 npm keeps an installed copy while the version number is unchanged, so bump it after changing the
 kit:

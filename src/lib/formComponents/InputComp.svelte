@@ -33,7 +33,6 @@
 	import FileUpload from './FileUpload.svelte';
 	import DatePicker from './DatePicker.svelte';
 	import DateRangePicker from './DateRangePicker.svelte';
-	import SelectComp from './SelectComp.svelte';
 	import ComboboxComp from './ComboboxComp.svelte';
 	import CheckboxComp from './CheckboxComp.svelte';
 	import type { CalendarKind } from '$lib/calendars';
@@ -208,16 +207,6 @@
 		/>
 	{:else if type === 'file'}
 		<FileUpload {name} {form} {image} {placeholder} {removable} {accept} {compress} />
-	{:else if type === 'select'}
-		<SelectComp
-			{name}
-			{label}
-			bind:value={$form[name]}
-			{items}
-			id={fieldId}
-			{invalid}
-			{describedBy}
-		/>
 	{:else if type === 'date'}
 		<DatePicker
 			bind:data={$form[name]}
@@ -232,7 +221,7 @@
 	{:else if type === 'dateMultiple'}
 		<DateRangePicker bind:data={$form[name]} {oldDays} {year} {futureDays} id={fieldId} />
 		<input type="hidden" {name} bind:value={$form[name]} />
-	{:else if type === 'combo'}
+	{:else if type === 'select' || type === 'combo'}
 		<ComboboxComp
 			{name}
 			{label}

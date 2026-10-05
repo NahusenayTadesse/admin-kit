@@ -1,6 +1,6 @@
 {
 	"name": "@nahu/admin-kit",
-	"version": "0.1.31",
+	"version": "0.1.36",
 	"private": true,
 	"description": "The dashboard, table, form, filter, CRUD and file-storage pieces shared across my SvelteKit projects.",
 	"type": "module",
@@ -19,7 +19,8 @@
 		"test:server": "vitest --run --project server",
 		"test:client": "vitest --run --project client",
 		"postinstall": "node bin/setup.js --postinstall",
-		"release": "npm version patch --no-git-tag-version"
+		"release": "npm version patch --no-git-tag-version",
+		"update:projects": "node scripts/update-projects.mjs"
 	},
 	"files": [
 		"dist",
