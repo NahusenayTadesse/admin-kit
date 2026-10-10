@@ -41,13 +41,15 @@
 	type Styles = 'identityIcon' | 'addressIcon' | 'employmentIcon' | 'personalIcon' | 'systemIcon';
 
 	import type { IconProps } from '@lucide/svelte';
+	import { useKitLook, type KitStyleName } from '$lib/kitStyle';
 	let {
 		title,
 		IconComp,
 		children,
 		editDialog,
 		style = 'identityIcon',
-		class: className = ''
+		class: className = '',
+		kitStyle = undefined
 	}: {
 		title: string;
 		IconComp: Component<IconProps>;
@@ -55,16 +57,78 @@
 		editDialog?: Snippet;
 		style: Styles;
 		class?: string;
+		/** The card's look, when it should differ from the app's style. (`style` is the icon's.) */
+		kitStyle?: KitStyleName;
 	} = $props();
+
+	const look = useKitLook();
+	const kit = $derived(kitStyle ?? look.style);
+
+	/* The default's classes are `styles` above; each other style replaces the card's parts. */
+	const LOOKS: Record<
+		Exclude<KitStyleName, 'default'>,
+		{ card: string; header: string; icon: string; title: string; content: string }
+	> = {
+		compact: {
+			card: 'rounded-md border bg-card overflow-hidden',
+			header: 'flex items-center gap-2 border-b bg-muted/50 px-3 py-2',
+			icon: 'flex size-6 items-center justify-center text-muted-foreground [&_svg]:size-4',
+			title: 'text-sm font-semibold',
+			content: 'p-3'
+		},
+		soft: {
+			card: 'rounded-(--kit-card-radius) bg-card shadow-(--kit-card-shadow) overflow-hidden',
+			header: 'flex items-center gap-3 px-6 pt-5 pb-1',
+			icon: 'flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary [&_svg]:size-4',
+			title: 'text-base font-semibold',
+			content: 'px-6 pt-2 pb-6'
+		},
+		sharp: {
+			card: 'border bg-card overflow-hidden',
+			header: 'flex items-center gap-2 border-b bg-muted px-4 py-2.5',
+			icon: 'flex size-5 items-center justify-center text-muted-foreground [&_svg]:size-3.5',
+			title: 'font-mono text-[11px] font-medium tracking-[0.12em] text-muted-foreground uppercase',
+			content: 'p-4'
+		},
+		formal: {
+			card: 'rounded-(--radius) border bg-card overflow-hidden',
+			header:
+				'mx-5 flex items-center gap-3 border-b-2 border-double border-foreground/25 pt-4 pb-3',
+			icon: 'flex size-5 items-center justify-center text-muted-foreground [&_svg]:size-4',
+			title: 'font-head text-lg font-semibold',
+			content: 'px-5 py-4'
+		},
+		bold: {
+			card: 'rounded-lg border-2 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)] overflow-hidden',
+			header: 'flex items-center gap-3 border-b-2 border-foreground bg-primary/15 px-5 py-3',
+			icon: 'flex size-8 items-center justify-center rounded-md border-2 border-foreground bg-background [&_svg]:size-4',
+			title: 'text-base font-bold',
+			content: 'p-5'
+		}
+	};
+	const parts = $derived(kit === 'default' ? undefined : LOOKS[kit]);
 </script>
 
-<section class="{styles.card} {className}">
-	<div class={styles.cardHeader}>
-		<div class="{styles.iconBox} {styles[style]}"><IconComp /></div>
-		<h4 class={styles.sectionTitle}>{title}</h4>
-		{@render editDialog?.()}
-	</div>
-	<div class={styles.cardContent}>
-		{@render children?.()}
-	</div>
-</section>
+{#if parts}
+	<section class="{parts.card} {className}" data-layout={kit}>
+		<div class={parts.header}>
+			<div class={parts.icon}><IconComp /></div>
+			<h4 class="min-w-0 flex-1"><span class={parts.title}>{title}</span></h4>
+			{@render editDialog?.()}
+		</div>
+		<div class={parts.content}>
+			{@render children?.()}
+		</div>
+	</section>
+{:else}
+	<section class="{styles.card} {className}">
+		<div class={styles.cardHeader}>
+			<div class="{styles.iconBox} {styles[style]}"><IconComp /></div>
+			<h4 class={styles.sectionTitle}>{title}</h4>
+			{@render editDialog?.()}
+		</div>
+		<div class={styles.cardContent}>
+			{@render children?.()}
+		</div>
+	</section>
+{/if}

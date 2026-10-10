@@ -1,0 +1,2 @@
+/* The kit's own dev app: the full theme, fonts included, as an app would import it. */
+@import '../lib/styles/theme.css';

@@ -5,6 +5,8 @@
 	import type { NavItem, SearchEntry } from '$lib/navigation';
 	import type { EntityRoutes } from '$lib/entityLinks';
 	import { setKitLabels, type KitLabels } from '$lib/labels';
+	import type { KitLook } from '$lib/kitStyle';
+	import KitStyle from './KitStyle.svelte';
 
 	/**
 	 * Wraps the dashboard layout once, so every kit component below it knows the viewer's
@@ -13,6 +15,9 @@
 	 *     <KitProvider {access} navigation={NAVIGATION} entities={ENTITIES} permList={data.permList}>
 	 *       …
 	 *     </KitProvider>
+	 *
+	 * `look={{ style: 'soft', accent: 'green' }}` gives the dashboard one of the kit's styles
+	 * (`STYLES.md`); left out, it keeps whatever a root `<KitStyle>` set, or the default.
 	 */
 	let {
 		permList = [],
@@ -22,6 +27,7 @@
 		searchExtra = [],
 		entities = {},
 		labels = undefined,
+		look = undefined,
 		children
 	}: {
 		permList?: string[];
@@ -37,6 +43,8 @@
 		 * layout with `setKitLabels` instead, so pages outside the dashboard get them too.
 		 */
 		labels?: Partial<KitLabels> | (() => Partial<KitLabels>);
+		/** The dashboard's style and its accent, radius and faces — see `<KitStyle>`. */
+		look?: KitLook;
 		children: Snippet;
 	} = $props();
 
@@ -69,4 +77,8 @@
 	});
 </script>
 
-{@render children()}
+{#if look}
+	<KitStyle {...look}>{@render children()}</KitStyle>
+{:else}
+	{@render children()}
+{/if}

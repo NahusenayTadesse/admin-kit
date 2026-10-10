@@ -191,7 +191,7 @@
 </script>
 
 <div class="flex w-full max-w-full flex-col justify-start gap-2 p-1">
-	<Label for={fieldId} class="capitalize">{label}</Label>
+	<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform)]">{label}</Label>
 
 	{#if type === 'textarea'}
 		<Textarea
@@ -238,7 +238,9 @@
 	{:else if type === 'checkboxSingle'}
 		<div class="flex items-center gap-2">
 			<Checkbox id={fieldId} bind:checked={$form[name]} {disabled} />
-			<Label for={fieldId} class="capitalize">{placeholder}</Label>
+			<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform)]"
+				>{placeholder}</Label
+			>
 			<input type="hidden" {name} bind:value={$form[name]} />
 		</div>
 	{:else if type === 'password'}

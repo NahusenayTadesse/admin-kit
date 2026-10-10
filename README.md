@@ -27,7 +27,7 @@ The layout mirrors an app's `src/lib`, so moving a project over is mostly
 | Detail pages, misc | `components/SingleView`, `SingleTable` (rows may say `kind: 'phone' \| 'status'` and `long`), `Section`, `DeleteEntity`, `PrintSheet`, `RowButton`, `Empty`, `Loading`, `Copy`, `PasswordGenerator`, `YouTubeEmbed` (a pasted YouTube link as a click-to-play player), `reports/StatCard`, `reports/ReportChart`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Helpers            | `youtube` (`parseYouTubeUrl` for every link shape incl. Shorts, `youtubeEmbedUrl`, `youtubeWatchUrl`, `youtubeThumbnail`, `isUsableYouTubeUrl`), `calendars` (Ethiopian ⇄ Gregorian), `calendarPreference.svelte`, `global` (Ethiopian dates, `formatETB`, `Item`), `time` (`localToday`, `localDayRange`, …), `expiry`, `utils` (`cn`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | shadcn primitives  | `components/ui/<name>/index.js` — 34 of them                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Theme              | `styles/theme.css`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Theme              | `styles/theme.css`; styles: `kitStyle` (`KitLook`, `KIT_STYLES`), `components/KitStyle.svelte` — see [STYLES.md](STYLES.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 TypeScript modules import without an extension (`@nahu/admin-kit/server/crud`), components with
 `.svelte`, and barrels with `/index.js`.
@@ -232,7 +232,27 @@ skip that whole subtree, leaving it to the app's own CSS and utilities:
 
 Anything portalled out of that subtree (a sheet, a dialog) needs the attribute on its own root.
 
-## Updating a project to a newer kit
+## Styles
+
+Six looks, picked with one prop — fonts, radius, button shapes, density, and a different layout
+for `SingleTable`, `SingleView`, `PageHeader`, `StatCard`, status badges and more:
+
+| Style               | Fits                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `default` (current) | General back-office dashboards; what every app on the kit looks like now                |
+| `compact`           | Dense data: inventory, pharmacy, accounting, reports, POS back offices                  |
+| `soft`              | Customer, patient and parent portals; reception, booking; tablets and touch screens     |
+| `sharp`             | Technical tools: IT assets, logs, audit trails, logistics, developer consoles           |
+| `formal`            | Law, government, schools, finance and insurance; anything read or printed as a document |
+| `bold`              | Brand-forward startups, events, ticketing, youth and education products                 |
+
+```svelte
+<KitProvider look={{ style: 'soft', accent: 'green' }} …>…</KitProvider>
+```
+
+Accent, radius, body and heading font are optional flags on top. Run `npm run dev` here and open
+**`/create`** to try every combination and copy the setup. [STYLES.md](STYLES.md) has where each
+style fits, every component's per-style layout, the tokens and how to add a style.
 
 To update all portfolio apps at once, run `npm run update:projects -- --check`. See
 [UPDATE-PROJECTS.md](UPDATE-PROJECTS.md) for the project list, selected updates, and usage.

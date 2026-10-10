@@ -3,17 +3,24 @@
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { formatETB } from '$lib/global';
 	import type { Stat } from './types';
+	import { useKitLook, type KitStyleName } from '$lib/kitStyle';
 
 	let {
 		stat,
 		onselect,
-		amharicMoney = true
+		amharicMoney = true,
+		kitStyle = undefined
 	}: {
 		stat: Stat;
 		onselect?: (section: string) => void;
 		/** Money as `ብር 1,300.00` (the default, as before) or, for an English screen, `ETB 1,300.00`. */
 		amharicMoney?: boolean;
+		/** The card's look, when it should differ from the app's style. */
+		kitStyle?: KitStyleName;
 	} = $props();
+
+	const look = useKitLook();
+	const style = $derived(kitStyle ?? look.style);
 
 	const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 	const DECIMAL = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -37,20 +44,99 @@
 	});
 
 	/** The accent stripe: what the number means, not whether it went up. */
+	const tone = $derived(stat.tone ?? 'neutral');
 	const accent = $derived(
 		{
 			positive: 'border-l-emerald-500',
 			negative: 'border-l-rose-500',
 			warning: 'border-l-amber-500',
 			neutral: 'border-l-sky-500'
-		}[stat.tone ?? 'neutral']
+		}[tone]
 	);
+
+	/* The tone in the other styles' terms: a dot, a tint, a top rule, an underline, a block. */
+	const TONES = {
+		positive: {
+			dot: 'bg-emerald-500',
+			tint: 'bg-emerald-500/10',
+			top: 'border-t-emerald-500',
+			rule: 'decoration-emerald-500',
+			block: 'bg-emerald-300 dark:bg-emerald-800'
+		},
+		negative: {
+			dot: 'bg-rose-500',
+			tint: 'bg-rose-500/10',
+			top: 'border-t-rose-500',
+			rule: 'decoration-rose-500',
+			block: 'bg-rose-300 dark:bg-rose-800'
+		},
+		warning: {
+			dot: 'bg-amber-500',
+			tint: 'bg-amber-500/12',
+			top: 'border-t-amber-500',
+			rule: 'decoration-amber-500',
+			block: 'bg-amber-300 dark:bg-amber-800'
+		},
+		neutral: {
+			dot: 'bg-sky-500',
+			tint: 'bg-sky-500/10',
+			top: 'border-t-sky-500',
+			rule: 'decoration-sky-500',
+			block: 'bg-sky-300 dark:bg-sky-800'
+		}
+	} as const;
+	const t = $derived(TONES[tone]);
+
+	const LOOKS = $derived({
+		default: {
+			card: `${accent} border-l-4 transition-shadow hover:shadow-md`,
+			content: 'p-4',
+			label: 'text-xs font-medium tracking-wide text-muted-foreground uppercase',
+			value: 'mt-1 text-2xl font-semibold'
+		},
+		compact: {
+			card: 'gap-0 py-0 transition-colors hover:bg-muted/40',
+			content: 'p-3',
+			label: 'flex items-center gap-1.5 text-xs font-medium text-muted-foreground',
+			value: 'mt-0.5 text-xl font-semibold'
+		},
+		soft: {
+			card: `${t.tint} shadow-none transition-transform hover:-translate-y-0.5`,
+			content: 'p-5',
+			label: 'text-sm font-medium text-muted-foreground',
+			value: 'mt-2 text-[1.625rem] leading-tight font-bold tracking-tight'
+		},
+		sharp: {
+			card: `${t.top} border-t-2 py-0`,
+			content: 'p-4',
+			label: 'font-mono text-[11px] tracking-[0.1em] text-muted-foreground uppercase',
+			value: 'mt-2 font-mono text-2xl font-medium'
+		},
+		formal: {
+			card: 'py-0',
+			content: 'p-5',
+			label: 'text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase',
+			value: `mt-2 font-head text-[1.75rem] leading-tight font-semibold underline decoration-2 underline-offset-8 ${t.rule}`
+		},
+		bold: {
+			card: `${t.block} py-0 transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5`,
+			content: 'p-5',
+			label: 'text-xs font-bold tracking-wide uppercase',
+			value: 'mt-1 text-[1.625rem] leading-tight font-bold tracking-tight'
+		}
+	} satisfies Record<
+		KitStyleName,
+		{ card: string; content: string; label: string; value: string }
+	>);
+	const parts = $derived(LOOKS[style] ?? LOOKS.default);
+	const text = $derived(style === 'default' ? 'p' : 'div');
 
 	const clickable = $derived(Boolean(stat.section && onselect));
 </script>
 
 <Card
-	class="{accent} border-l-4 transition-shadow hover:shadow-md {clickable ? 'cursor-pointer' : ''}"
+	class="{parts.card} {clickable ? 'cursor-pointer' : ''}"
+	data-layout={style}
 	role={clickable ? 'button' : undefined}
 	tabindex={clickable ? 0 : undefined}
 	onclick={() => clickable && onselect?.(stat.section as string)}
@@ -62,11 +148,19 @@
 		}
 	}}
 >
-	<CardContent class="p-4">
-		<p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">{stat.label}</p>
-		<p class="mt-1 text-2xl font-semibold break-words tabular-nums">{display}</p>
+	<!-- `div` outside the default: the kit's own `p` rule would overrule these faces and weights. -->
+	<CardContent class={parts.content}>
+		<svelte:element this={text} class={parts.label}>
+			{#if style === 'compact'}<span class="size-1.5 rounded-full {t.dot}"></span>{/if}
+			{stat.label}
+		</svelte:element>
+		<svelte:element this={text} class="{parts.value} break-words tabular-nums"
+			>{display}</svelte:element
+		>
 		{#if stat.hint}
-			<p class="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
+			<p class="mt-1 text-xs {style === 'bold' ? 'text-foreground/75' : 'text-muted-foreground'}">
+				{stat.hint}
+			</p>
 		{/if}
 	</CardContent>
 </Card>

@@ -13,7 +13,10 @@
 <tbody
 	bind:this={ref}
 	data-slot="table-body"
-	class={cn('[&_tr:last-child]:border-0', className)}
+	class={cn(
+		'[&_tr:last-child]:border-0 [&>tr:nth-child(even)>td]:bg-(--kit-table-stripe)',
+		className
+	)}
 	{...restProps}
 >
 	{@render children?.()}
