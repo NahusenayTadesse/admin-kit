@@ -19,8 +19,8 @@
 		cardContent: 'p-5',
 
 		// Typography
-		mainHeading: 'text-3xl text-cetner font-extrabold tracking-tight text-gray-900 dark:text-white',
-		subHeading: 'mt-1 text-sm text-gray-500 dark:text-slate-400',
+		mainHeading: 'text-3xl text-center font-extrabold tracking-tight text-foreground',
+		subHeading: 'mt-1 text-sm text-muted-foreground',
 		sectionTitle: 'text-base font-semibold text-foreground',
 
 		/*

@@ -12,7 +12,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Table2, ChartColumnBig } from '@lucide/svelte';
 	import { formatETB } from '$lib/global';
-	import { THEME, fade, type ThemeName } from './palette';
+	import { chartTheme, fade, type ChartTheme, type ThemeName } from './palette';
 	import type { ReportChartData } from './types';
 
 	let { chart }: { chart: ReportChartData } = $props();
@@ -28,7 +28,8 @@
 	let showTable = $state(false);
 
 	const theme = $derived<ThemeName>(mode.current === 'dark' ? 'dark' : 'light');
-	const tokens = $derived(THEME[theme]);
+	/** The app's chart colours where the canvas is, read each time the chart is built. */
+	let tokens: ChartTheme = chartTheme(null, 'light');
 	const isEmpty = $derived(
 		chart.labels.length === 0 || chart.series.every((s) => s.data.every((v) => !v))
 	);
@@ -177,6 +178,7 @@
 			if (cancelled || !canvas) return;
 
 			instance?.destroy();
+			tokens = chartTheme(canvas, theme);
 			instance = new ChartCtor(canvas, {
 				type: chart.kind === 'area' ? 'line' : chart.kind,
 				data: { labels: chart.labels, datasets: datasets() },

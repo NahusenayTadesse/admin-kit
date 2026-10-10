@@ -14,7 +14,7 @@
 	bind:this={ref}
 	data-slot="table-head"
 	class={cn(
-		'h-(--kit-table-head-h) bg-(--kit-table-head-bg) bg-clip-padding px-(--kit-cell-px) text-left align-middle font-(family-name:--kit-table-head-font) text-(length:--kit-table-head-size) font-(--kit-table-head-weight) tracking-(--kit-table-head-tracking) whitespace-nowrap text-(--kit-table-head-color) [text-transform:var(--kit-table-head-transform)] [&:has([role=checkbox])]:pr-0',
+		'h-(--kit-table-head-h,2.5rem) bg-(--kit-table-head-bg,transparent) bg-clip-padding px-(--kit-cell-px,0.5rem) text-left align-middle font-(family-name:--kit-table-head-font) text-(length:--kit-table-head-size) font-(--kit-table-head-weight,500) tracking-(--kit-table-head-tracking) whitespace-nowrap text-(--kit-table-head-color,var(--foreground)) [text-transform:var(--kit-table-head-transform)] [&:has([role=checkbox])]:pr-0',
 		className
 	)}
 	{...restProps}

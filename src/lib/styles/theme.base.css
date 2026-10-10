@@ -21,7 +21,12 @@
 
 @import 'tw-animate-css';
 
-/* The styles (compact, soft, sharp, formal, bold), accents, radius and font flags. */
+/*
+ * The kit's default colours (colors.css), then the styles and the accent, radius and font flags
+ * (kit-styles.css). Both are weightless (`:where()`), so whatever the app sets after this import
+ * wins: the kit only fills in what the app leaves unset.
+ */
+@import './colors.css';
 @import './kit-styles.css';
 
 /*
@@ -32,116 +37,6 @@
 
 /* --- Custom Variants --- */
 @custom-variant dark (&:is(.dark *));
-
-/*
- * --- Light Theme (Default) ---
- * Neutral greys with almost no hue, one restrained blue for actions and focus — taken from the
- * amno mark, darkened so white text on it stays readable. The page is a very light grey and
- * cards are white, which separates them without a shadow or a gradient doing it.
- *
- * `:where()` gives these no weight, so a style (`data-kit-style`, kit-styles.css) can replace
- * them, and an app's own `:root { … }` / `.dark { … }` after the import still replaces both.
- */
-:where(:root) {
-	--radius: 0.5rem;
-
-	/* Backgrounds */
-	--background: oklch(0.985 0.002 250);
-	--foreground: oklch(0.2 0.01 255);
-
-	/* Cards / Popovers */
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.2 0.01 255);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.2 0.01 255);
-
-	/* Primary (actions) */
-	--primary: oklch(0.48 0.14 258);
-	--primary-foreground: oklch(0.99 0 0);
-
-	/* Secondary / Muted / Accent */
-	--secondary: oklch(0.96 0.003 250);
-	--secondary-foreground: oklch(0.25 0.01 255);
-	--muted: oklch(0.96 0.003 250);
-	--muted-foreground: oklch(0.5 0.01 255);
-	--accent: oklch(0.95 0.005 250);
-	--accent-foreground: oklch(0.25 0.01 255);
-
-	/* Destructive */
-	--destructive: oklch(0.55 0.2 27);
-
-	/* Borders / Inputs / Ring */
-	--border: oklch(0.91 0.004 250);
-	--input: oklch(0.89 0.004 250);
-	--ring: oklch(0.48 0.14 258 / 0.5);
-
-	/* Charts — distinguishable, not loud */
-	--chart-1: oklch(0.5 0.13 258);
-	--chart-2: oklch(0.6 0.09 185);
-	--chart-3: oklch(0.65 0.1 70);
-	--chart-4: oklch(0.55 0.06 300);
-	--chart-5: oklch(0.6 0.12 25);
-
-	/* Sidebar */
-	--sidebar: oklch(1 0 0);
-	--sidebar-foreground: oklch(0.25 0.01 255);
-	--sidebar-primary: oklch(0.48 0.14 258);
-	--sidebar-primary-foreground: oklch(0.99 0 0);
-	--sidebar-accent: oklch(0.95 0.005 250);
-	--sidebar-accent-foreground: oklch(0.2 0.01 255);
-	--sidebar-border: oklch(0.91 0.004 250);
-	--sidebar-ring: oklch(0.48 0.14 258 / 0.5);
-}
-
-/* --- Dark Theme --- */
-:where(.dark) {
-	/* Backgrounds */
-	--background: oklch(0.17 0.006 255);
-	--foreground: oklch(0.95 0.003 250);
-
-	/* Cards / Popovers */
-	--card: oklch(0.21 0.006 255);
-	--card-foreground: oklch(0.95 0.003 250);
-	--popover: oklch(0.21 0.006 255);
-	--popover-foreground: oklch(0.95 0.003 250);
-
-	/* Primary */
-	--primary: oklch(0.65 0.13 258);
-	--primary-foreground: oklch(0.15 0.01 255);
-
-	/* Secondary / Muted / Accent */
-	--secondary: oklch(0.27 0.006 255);
-	--secondary-foreground: oklch(0.95 0.003 250);
-	--muted: oklch(0.27 0.006 255);
-	--muted-foreground: oklch(0.68 0.008 255);
-	--accent: oklch(0.28 0.008 255);
-	--accent-foreground: oklch(0.95 0.003 250);
-
-	/* Destructive */
-	--destructive: oklch(0.65 0.18 25);
-
-	/* Borders / Inputs */
-	--border: oklch(1 0 0 / 0.09);
-	--input: oklch(1 0 0 / 0.14);
-	--ring: oklch(0.65 0.13 258 / 0.5);
-
-	/* Charts */
-	--chart-1: oklch(0.65 0.13 258);
-	--chart-2: oklch(0.68 0.09 185);
-	--chart-3: oklch(0.72 0.1 70);
-	--chart-4: oklch(0.65 0.07 300);
-	--chart-5: oklch(0.66 0.12 25);
-
-	/* Sidebar */
-	--sidebar: oklch(0.2 0.006 255);
-	--sidebar-foreground: oklch(0.92 0.003 250);
-	--sidebar-primary: oklch(0.65 0.13 258);
-	--sidebar-primary-foreground: oklch(0.15 0.01 255);
-	--sidebar-accent: oklch(0.28 0.008 255);
-	--sidebar-accent-foreground: oklch(0.95 0.003 250);
-	--sidebar-border: oklch(1 0 0 / 0.09);
-	--sidebar-ring: oklch(0.65 0.13 258 / 0.5);
-}
 
 /* --- Theme Variables for Tailwind-like access --- */
 @theme inline {
@@ -165,6 +60,12 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-success: var(--success);
+	--color-success-foreground: var(--success-foreground);
+	--color-warning: var(--warning);
+	--color-warning-foreground: var(--warning-foreground);
+	--color-info: var(--info);
+	--color-info-foreground: var(--info-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -185,13 +86,29 @@
 	/*
 	 * An app that brings its own font sets --kit-font-head / --kit-font-body / --kit-font-sans (or
 	 * just --kit-font-sans, which the other two fall back to); with none set, these are Inter,
-	 * then the system's sans-serif, exactly as before. `--kit-sans` and friends are worked out in
-	 * kit-styles.css, once per styled element, so a style's faces reach everything inside it.
+	 * then the system's sans-serif, exactly as before. `inline`, so each is read where it is used:
+	 * a subtree that sets its own `--kit-font-sans` (a storefront) gets its own face.
 	 */
-	--font-sans: var(--kit-sans);
-	--font-head: var(--kit-head);
-	--font-body: var(--kit-body);
-	--font-mono: var(--kit-mono);
+	--font-sans: var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif);
+	--font-head: var(
+		--kit-font-head,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	--font-body: var(
+		--kit-font-body,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	--font-mono: var(
+		--kit-font-mono,
+		ui-monospace,
+		SFMono-Regular,
+		Menlo,
+		Monaco,
+		Consolas,
+		'Liberation Mono',
+		'Courier New',
+		monospace
+	);
 }
 
 /* --- Base Styles --- */
@@ -214,46 +131,61 @@
  * `:where()` keeps the rules' specificity at an element's, as it always was.
  */
 h1:where(:not([data-site-type], [data-site-type] *)) {
-	font-family: var(--kit-head);
-	font-weight: var(--kit-heading-weight);
-	font-size: var(--kit-h1-size);
+	font-family: var(
+		--kit-font-head,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	font-weight: var(--kit-heading-weight, 600);
+	font-size: var(--kit-h1-size, 1.75rem);
 	line-height: 1.25;
-	letter-spacing: var(--kit-h1-tracking);
+	letter-spacing: var(--kit-h1-tracking, -0.01em);
 }
 
 h2:where(:not([data-site-type], [data-site-type] *)) {
-	font-family: var(--kit-head);
-	font-weight: var(--kit-heading-weight);
-	font-size: var(--kit-h2-size);
+	font-family: var(
+		--kit-font-head,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	font-weight: var(--kit-heading-weight, 600);
+	font-size: var(--kit-h2-size, 1.375rem);
 	line-height: 1.3;
 	letter-spacing: var(--kit-heading-tracking);
 }
 
 h3:where(:not([data-site-type], [data-site-type] *)) {
-	font-family: var(--kit-body);
-	font-weight: var(--kit-heading-weight);
-	font-size: var(--kit-h3-size);
+	font-family: var(
+		--kit-font-body,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	font-weight: var(--kit-heading-weight, 600);
+	font-size: var(--kit-h3-size, 1.125rem);
 	line-height: 1.4;
 }
 
 h4:where(:not([data-site-type], [data-site-type] *)) {
-	font-family: var(--kit-body);
-	font-weight: var(--kit-heading-weight);
+	font-family: var(
+		--kit-font-body,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
+	font-weight: var(--kit-heading-weight, 600);
 	font-size: 1rem;
 	line-height: 1.4;
 }
 
 p:where(:not([data-site-type], [data-site-type] *)) {
-	font-family: var(--kit-body);
+	font-family: var(
+		--kit-font-body,
+		var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif)
+	);
 	font-weight: 400;
 	line-height: 1.6;
 }
 
 @media (max-width: 480px) {
 	h1:where(:not([data-site-type], [data-site-type] *)) {
-		font-size: calc(var(--kit-h1-size) - 0.25rem);
+		font-size: calc(var(--kit-h1-size, 1.75rem) - 0.25rem);
 	}
 	h2:where(:not([data-site-type], [data-site-type] *)) {
-		font-size: calc(var(--kit-h2-size) - 0.125rem);
+		font-size: calc(var(--kit-h2-size, 1.375rem) - 0.125rem);
 	}
 }

@@ -31,7 +31,7 @@ describe('SingleTable.svelte', () => {
 			singleTable: [{ name: 'Status', value: 'active' }]
 		});
 
-		expect(screen.container.querySelector('.bg-green-400')).not.toBeNull();
+		expect(screen.container.querySelector('[data-role="success"]')).not.toBeNull();
 	});
 
 	it('renders nothing in the body when singleTable is empty', async () => {

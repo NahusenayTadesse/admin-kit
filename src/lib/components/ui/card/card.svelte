@@ -14,7 +14,7 @@
 	bind:this={ref}
 	data-slot="card"
 	class={cn(
-		'flex flex-col gap-(--kit-card-gap) rounded-(--kit-card-radius) border-(length:--kit-card-border) bg-card py-(--kit-card-pad) text-card-foreground shadow-(--kit-card-shadow)',
+		'flex flex-col gap-(--kit-card-gap,1.5rem) rounded-(--kit-card-radius,calc(var(--radius)+4px)) border-(length:--kit-card-border,1px) border-(color:--kit-frame,var(--border)) bg-card py-(--kit-card-pad,1.5rem) text-card-foreground shadow-(--kit-card-shadow,0_1px_3px_0_rgb(0_0_0/0.1),0_1px_2px_-1px_rgb(0_0_0/0.1))',
 		className
 	)}
 	{...restProps}

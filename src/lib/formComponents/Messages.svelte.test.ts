@@ -18,7 +18,7 @@ describe('Messages.svelte', () => {
 
 		const el = page.getByText('Saved successfully');
 		await expect.element(el).toBeInTheDocument();
-		await expect.element(el).toHaveClass('text-green-500');
+		await expect.element(el).toHaveClass('text-success');
 	});
 
 	it('renders an error message in red', async () => {
@@ -27,6 +27,6 @@ describe('Messages.svelte', () => {
 
 		const el = page.getByText('Something went wrong');
 		await expect.element(el).toBeInTheDocument();
-		await expect.element(el).toHaveClass('text-red-500');
+		await expect.element(el).toHaveClass('text-destructive');
 	});
 });

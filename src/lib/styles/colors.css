@@ -1,0 +1,137 @@
+/*
+ * --- The kit's default colours ---
+ * What the kit draws with when the app sets nothing. Every kit component — the primitives, tables,
+ * status badges, notices, stat cards, charts — takes its colours from these names and nothing
+ * else, so an app that redefines them after the theme import (`:root { --primary: …; }` and
+ * `.dark { … }`, or on a subtree such as a public site's `.site`) recolours the whole kit.
+ *
+ * Weightless (`:where()`): an app's `:root` / `.dark` rule always wins over these, whatever order
+ * the stylesheets end up in. The styles (`data-kit-style`) never set a colour, and the accent flag
+ * (`data-kit-accent`) is weightless too: it only stands in for an app that sets no `--primary`.
+ */
+
+/*
+ * --- Light Theme (Default) ---
+ * Neutral greys with almost no hue, one restrained blue for actions and focus — taken from the
+ * amno mark, darkened so white text on it stays readable. The page is a very light grey and
+ * cards are white, which separates them without a shadow or a gradient doing it.
+ */
+:where(:root) {
+	--radius: 0.5rem;
+
+	/* Backgrounds */
+	--background: oklch(0.985 0.002 250);
+	--foreground: oklch(0.2 0.01 255);
+
+	/* Cards / Popovers */
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.2 0.01 255);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.2 0.01 255);
+
+	/* Primary (actions) */
+	--primary: oklch(0.48 0.14 258);
+	--primary-foreground: oklch(0.99 0 0);
+
+	/* Secondary / Muted / Accent */
+	--secondary: oklch(0.96 0.003 250);
+	--secondary-foreground: oklch(0.25 0.01 255);
+	--muted: oklch(0.96 0.003 250);
+	--muted-foreground: oklch(0.5 0.01 255);
+	--accent: oklch(0.95 0.005 250);
+	--accent-foreground: oklch(0.25 0.01 255);
+
+	/* Destructive */
+	--destructive: oklch(0.55 0.2 27);
+
+	/*
+	 * States: what status badges, notices, stat cards and the password meter colour with. Set them
+	 * with the rest of the app's palette; `--destructive` is the fourth.
+	 */
+	--success: oklch(0.56 0.13 150);
+	--success-foreground: oklch(0.99 0 0);
+	--warning: oklch(0.72 0.15 70);
+	--warning-foreground: oklch(0.22 0.04 60);
+	--info: oklch(0.56 0.12 235);
+	--info-foreground: oklch(0.99 0 0);
+
+	/* Borders / Inputs / Ring */
+	--border: oklch(0.91 0.004 250);
+	--input: oklch(0.89 0.004 250);
+	--ring: oklch(0.48 0.14 258 / 0.5);
+
+	/* Charts — distinguishable, not loud */
+	--chart-1: oklch(0.5 0.13 258);
+	--chart-2: oklch(0.6 0.09 185);
+	--chart-3: oklch(0.65 0.1 70);
+	--chart-4: oklch(0.55 0.06 300);
+	--chart-5: oklch(0.6 0.12 25);
+
+	/* Sidebar */
+	--sidebar: oklch(1 0 0);
+	--sidebar-foreground: oklch(0.25 0.01 255);
+	--sidebar-primary: oklch(0.48 0.14 258);
+	--sidebar-primary-foreground: oklch(0.99 0 0);
+	--sidebar-accent: oklch(0.95 0.005 250);
+	--sidebar-accent-foreground: oklch(0.2 0.01 255);
+	--sidebar-border: oklch(0.91 0.004 250);
+	--sidebar-ring: oklch(0.48 0.14 258 / 0.5);
+}
+
+/* --- Dark Theme --- */
+:where(.dark) {
+	/* Backgrounds */
+	--background: oklch(0.17 0.006 255);
+	--foreground: oklch(0.95 0.003 250);
+
+	/* Cards / Popovers */
+	--card: oklch(0.21 0.006 255);
+	--card-foreground: oklch(0.95 0.003 250);
+	--popover: oklch(0.21 0.006 255);
+	--popover-foreground: oklch(0.95 0.003 250);
+
+	/* Primary */
+	--primary: oklch(0.65 0.13 258);
+	--primary-foreground: oklch(0.15 0.01 255);
+
+	/* Secondary / Muted / Accent */
+	--secondary: oklch(0.27 0.006 255);
+	--secondary-foreground: oklch(0.95 0.003 250);
+	--muted: oklch(0.27 0.006 255);
+	--muted-foreground: oklch(0.68 0.008 255);
+	--accent: oklch(0.28 0.008 255);
+	--accent-foreground: oklch(0.95 0.003 250);
+
+	/* Destructive */
+	--destructive: oklch(0.65 0.18 25);
+
+	/* States */
+	--success: oklch(0.7 0.14 150);
+	--success-foreground: oklch(0.16 0.03 150);
+	--warning: oklch(0.8 0.14 75);
+	--warning-foreground: oklch(0.2 0.04 60);
+	--info: oklch(0.7 0.12 235);
+	--info-foreground: oklch(0.16 0.03 235);
+
+	/* Borders / Inputs */
+	--border: oklch(1 0 0 / 0.09);
+	--input: oklch(1 0 0 / 0.14);
+	--ring: oklch(0.65 0.13 258 / 0.5);
+
+	/* Charts */
+	--chart-1: oklch(0.65 0.13 258);
+	--chart-2: oklch(0.68 0.09 185);
+	--chart-3: oklch(0.72 0.1 70);
+	--chart-4: oklch(0.65 0.07 300);
+	--chart-5: oklch(0.66 0.12 25);
+
+	/* Sidebar */
+	--sidebar: oklch(0.2 0.006 255);
+	--sidebar-foreground: oklch(0.92 0.003 250);
+	--sidebar-primary: oklch(0.65 0.13 258);
+	--sidebar-primary-foreground: oklch(0.15 0.01 255);
+	--sidebar-accent: oklch(0.28 0.008 255);
+	--sidebar-accent-foreground: oklch(0.95 0.003 250);
+	--sidebar-border: oklch(1 0 0 / 0.09);
+	--sidebar-ring: oklch(0.65 0.13 258 / 0.5);
+}

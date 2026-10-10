@@ -1,4 +1,8 @@
 /**
+ * The kit's own chart palette, one validated set per theme — the fallback. Charts draw with the
+ * app's `--chart-1` … `--chart-5` first (`chartTheme` below); these fill in series six to eight and
+ * anything the page leaves undefined.
+ *
  * The chart palette, one validated set per theme.
  *
  * The eight hues are assigned to series in this fixed order and never cycled —
@@ -50,10 +54,69 @@ export const THEME = {
 
 export type ThemeName = keyof typeof THEME;
 
-/** Hex plus an alpha byte — used for area fills under a line. */
-export function fade(hex: string, alpha: number): string {
-	const byte = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
+export type ChartTheme = {
+	series: readonly string[];
+	surface: string;
+	text: string;
+	muted: string;
+	grid: string;
+};
+
+/** A colour with a new alpha — for area fills under a line. Takes `#rrggbb` or `rgba(…)`. */
+export function fade(colour: string, alpha: number): string {
+	const a = Math.min(1, Math.max(0, alpha));
+	const rgba = /^rgba?\(([^,]+),([^,]+),([^,)]+)/.exec(colour.replaceAll(' ', ''));
+	if (rgba) return `rgba(${rgba[1]}, ${rgba[2]}, ${rgba[3]}, ${a})`;
+	const byte = Math.round(a * 255)
 		.toString(16)
 		.padStart(2, '0');
-	return `${hex}${byte}`;
+	return `${colour}${byte}`;
+}
+
+let probe: CanvasRenderingContext2D | null | undefined;
+
+/**
+ * Any CSS colour the browser knows (`oklch(…)`, `#…`, a name) as `rgba(…)`, or `null` when it is
+ * empty or not a colour. Chart.js mixes hover shades itself and only reads hex and rgb, so the
+ * app's colours are put through a one-pixel canvas first.
+ */
+export function toRgba(value: string): string | null {
+	const colour = value.trim();
+	if (!colour || typeof document === 'undefined') return null;
+	probe ??= document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+	if (!probe) return null;
+	const sentinel = '#010203';
+	probe.fillStyle = sentinel;
+	probe.fillStyle = colour;
+	if (probe.fillStyle === sentinel && colour.toLowerCase() !== sentinel) return null;
+	probe.clearRect(0, 0, 1, 1);
+	probe.fillRect(0, 0, 1, 1);
+	const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+	return `rgba(${r}, ${g}, ${b}, ${Math.round((a / 255) * 1000) / 1000})`;
+}
+
+/**
+ * The chart colours in effect at `element`: the app's `--chart-1` … `--chart-5` for the first five
+ * series, `--card`, `--foreground`, `--muted-foreground` and `--border` for the surface, text and
+ * grid — read where the chart is, so a subtree with its own palette gets its own. Anything the
+ * page does not define (and series six to eight) comes from the kit's set above.
+ */
+export function chartTheme(element: Element | null, name?: ThemeName): ChartTheme {
+	const dark =
+		name === 'dark' ||
+		(name === undefined &&
+			typeof document !== 'undefined' &&
+			document.documentElement.classList.contains('dark'));
+	const base = THEME[dark ? 'dark' : 'light'];
+	if (!element || typeof getComputedStyle === 'undefined') return base;
+
+	const css = getComputedStyle(element);
+	const read = (name: string) => toRgba(css.getPropertyValue(name));
+	return {
+		series: base.series.map((fallback, i) => (i < 5 ? read(`--chart-${i + 1}`) : null) ?? fallback),
+		surface: read('--card') ?? base.surface,
+		text: read('--foreground') ?? base.text,
+		muted: read('--muted-foreground') ?? base.muted,
+		grid: read('--border') ?? base.grid
+	};
 }

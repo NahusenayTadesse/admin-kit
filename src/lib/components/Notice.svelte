@@ -59,11 +59,11 @@
 	const frame = $derived(FRAMES[style] ?? FRAMES.default);
 
 	const TONES = {
-		info: { box: 'border-sky-500/40 bg-sky-500/10', icon: Info, iconClass: 'text-sky-600' },
+		info: { box: 'border-info/40 bg-info/10', icon: Info, iconClass: 'text-info' },
 		warning: {
-			box: 'border-amber-500/40 bg-amber-500/10',
+			box: 'border-warning/50 bg-warning/12',
 			icon: TriangleAlert,
-			iconClass: 'text-amber-600'
+			iconClass: 'text-warning'
 		},
 		danger: {
 			box: 'border-destructive/50 bg-destructive/10',
@@ -71,9 +71,9 @@
 			iconClass: 'text-destructive'
 		},
 		success: {
-			box: 'border-emerald-500/40 bg-emerald-500/10',
+			box: 'border-success/40 bg-success/10',
 			icon: CircleCheck,
-			iconClass: 'text-emerald-600'
+			iconClass: 'text-success'
 		}
 	} as const;
 	const look = $derived(TONES[tone]);

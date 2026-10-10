@@ -7,6 +7,7 @@
 	import Activity from '@lucide/svelte/icons/activity';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import type { Facet } from './table-state.svelte';
+	import { chartTheme, fade } from '$lib/components/reports/palette';
 
 	/**
 	 * The chart pane beside the table.
@@ -50,18 +51,8 @@
 		{ value: 'radar', label: L.chartRadar }
 	]);
 
-	const PALETTE = [
-		'#6366f1',
-		'#22d3ee',
-		'#f59e0b',
-		'#10b981',
-		'#f43f5e',
-		'#8b5cf6',
-		'#14b8a6',
-		'#fb923c',
-		'#3b82f6',
-		'#ec4899'
-	];
+	/** The app's chart colours where the canvas is (`--chart-1` …), read when the chart is built. */
+	let palette: readonly string[] = chartTheme(null).series;
 
 	const keys = $derived(Object.keys(facets).filter((k) => facets[k]?.length));
 
@@ -101,8 +92,8 @@
 				{
 					label: label(currentKey),
 					data: current.map((f) => f.count),
-					backgroundColor: current.map((_, i) => `${PALETTE[i % PALETTE.length]}cc`),
-					borderColor: current.map((_, i) => PALETTE[i % PALETTE.length]),
+					backgroundColor: current.map((_, i) => fade(palette[i % palette.length], 0.8)),
+					borderColor: current.map((_, i) => palette[i % palette.length]),
 					borderWidth: 2,
 					borderRadius: type === 'bar' ? 6 : 0,
 					/*
@@ -144,6 +135,7 @@
 	 */
 	$effect(() => {
 		const el = canvas;
+		if (el) palette = chartTheme(el).series;
 		const data = chartData();
 		const options = chartOptions();
 

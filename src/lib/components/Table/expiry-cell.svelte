@@ -31,7 +31,7 @@
 {:else if state.kind === 'expired'}
 	<Badge variant="destructive">{L.expired(formatEthiopianDate(new Date(state.on)))}</Badge>
 {:else if state.kind === 'expiring'}
-	<Badge class="bg-amber-500 text-white">
+	<Badge class="border-transparent bg-warning text-warning-foreground">
 		{L.daysLeft(state.days, formatEthiopianDate(new Date(state.on)))}
 	</Badge>
 {:else}

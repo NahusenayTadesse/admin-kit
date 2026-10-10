@@ -3,9 +3,15 @@
 	import SingleTable from './SingleTable.svelte';
 	import type { KitLook } from '$lib/kitStyle';
 
-	let { look, global = true }: { look: KitLook; global?: boolean } = $props();
+	let { look, inner = undefined }: { look: KitLook; inner?: KitLook } = $props();
 </script>
 
-<KitStyle {...look} {global}>
-	<SingleTable singleTable={[{ name: 'Name', value: 'Jane Doe' }]} />
+<KitStyle {...look}>
+	{#if inner}
+		<KitStyle {...inner}>
+			<SingleTable singleTable={[{ name: 'Name', value: 'Jane Doe' }]} />
+		</KitStyle>
+	{:else}
+		<SingleTable singleTable={[{ name: 'Name', value: 'Jane Doe' }]} />
+	{/if}
 </KitStyle>

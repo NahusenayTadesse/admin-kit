@@ -218,7 +218,10 @@ theme without the web font, so no request goes to Google and the app's own font 
 `--kit-font-head` and `--kit-font-body` default to `--kit-font-sans`; set them for a different
 heading or body face. With none set, the kit's text is Inter if installed, else the system's
 sans-serif. Colours and radius are plain variables (`--primary`, `--radius`, …) to redefine after
-the import, in `:root` and `.dark`. `theme.css` is simply `fonts.css` plus `theme.base.css`.
+the import, in `:root` and `.dark`. `theme.css` is simply `fonts.css` plus `theme.base.css`. The kit's own
+values are weightless defaults, so yours always win, and every kit component draws with them.
+Besides shadcn's set, the kit uses `--success`, `--warning` and `--info` (each with a
+`-foreground`) for statuses, notices and stat cards — define them with the rest of your palette.
 
 The kit also styles bare `h1`–`h4` and `p` (application-sized, in `--font-head` / `--font-body`).
 Those rules are unlayered, so they beat Tailwind utilities such as `text-5xl` or `font-medium` on
@@ -250,7 +253,10 @@ for `SingleTable`, `SingleView`, `PageHeader`, `StatCard`, status badges and mor
 <KitProvider look={{ style: 'soft', accent: 'green' }} …>…</KitProvider>
 ```
 
-Accent, radius, body and heading font are optional flags on top. Run `npm run dev` here and open
+Accent, radius, body and heading font are optional flags on top. **A style never sets a colour:**
+everything the kit draws — status badges, notices, stat cards, charts included — uses the app's
+palette (`--primary`, `--success`, `--warning`, `--info`, `--chart-*`, …), and the app's own
+`:root` / `.dark` values always win over the kit's. Run `npm run dev` here and open
 **`/create`** to try every combination and copy the setup. [STYLES.md](STYLES.md) has where each
 style fits, every component's per-style layout, the tokens and how to add a style.
 

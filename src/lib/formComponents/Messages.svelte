@@ -3,7 +3,7 @@
 </script>
 
 {#if $message}
-	<p class={$message.type === 'error' ? 'text-red-500' : 'text-green-500'}>
+	<p class={$message.type === 'error' ? 'text-destructive' : 'text-success'}>
 		{$message ? $message.text : ''}
 	</p>
 {/if}

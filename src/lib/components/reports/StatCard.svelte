@@ -47,42 +47,43 @@
 	const tone = $derived(stat.tone ?? 'neutral');
 	const accent = $derived(
 		{
-			positive: 'border-l-emerald-500',
-			negative: 'border-l-rose-500',
-			warning: 'border-l-amber-500',
-			neutral: 'border-l-sky-500'
+			positive: 'border-l-success',
+			negative: 'border-l-destructive',
+			warning: 'border-l-warning',
+			neutral: 'border-l-info'
 		}[tone]
 	);
 
-	/* The tone in the other styles' terms: a dot, a tint, a top rule, an underline, a block. */
+	/* The tone in the other styles' terms — a dot, a tint, a top rule, an underline, a block — all
+	 * from the app's `--success`, `--destructive`, `--warning` and `--info`. */
 	const TONES = {
 		positive: {
-			dot: 'bg-emerald-500',
-			tint: 'bg-emerald-500/10',
-			top: 'border-t-emerald-500',
-			rule: 'decoration-emerald-500',
-			block: 'bg-emerald-300 dark:bg-emerald-800'
+			dot: 'bg-success',
+			tint: 'bg-success/10',
+			top: 'border-t-success',
+			rule: 'decoration-success',
+			block: 'bg-success/30'
 		},
 		negative: {
-			dot: 'bg-rose-500',
-			tint: 'bg-rose-500/10',
-			top: 'border-t-rose-500',
-			rule: 'decoration-rose-500',
-			block: 'bg-rose-300 dark:bg-rose-800'
+			dot: 'bg-destructive',
+			tint: 'bg-destructive/10',
+			top: 'border-t-destructive',
+			rule: 'decoration-destructive',
+			block: 'bg-destructive/25'
 		},
 		warning: {
-			dot: 'bg-amber-500',
-			tint: 'bg-amber-500/12',
-			top: 'border-t-amber-500',
-			rule: 'decoration-amber-500',
-			block: 'bg-amber-300 dark:bg-amber-800'
+			dot: 'bg-warning',
+			tint: 'bg-warning/15',
+			top: 'border-t-warning',
+			rule: 'decoration-warning',
+			block: 'bg-warning/40'
 		},
 		neutral: {
-			dot: 'bg-sky-500',
-			tint: 'bg-sky-500/10',
-			top: 'border-t-sky-500',
-			rule: 'decoration-sky-500',
-			block: 'bg-sky-300 dark:bg-sky-800'
+			dot: 'bg-info',
+			tint: 'bg-info/10',
+			top: 'border-t-info',
+			rule: 'decoration-info',
+			block: 'bg-info/25'
 		}
 	} as const;
 	const t = $derived(TONES[tone]);

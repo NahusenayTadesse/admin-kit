@@ -1,6 +1,6 @@
 /*
  * --- Styles ---
- * The kit's looks, picked with attributes on <html> (or any element, for a preview):
+ * The kit's looks, picked with attributes on <html>:
  *
  *   data-kit-style="default | compact | soft | sharp | formal | bold"
  *   data-kit-accent="blue | teal | green | violet | amber | rose | neutral"
@@ -8,129 +8,46 @@
  *   data-kit-font="inter | plex | jakarta | geist | source | grotesk | serif | mono"
  *   data-kit-heading="(same list)"
  *
- * `<KitStyle>` / `<KitProvider look={…}>` set them; `src/lib/kitStyle.ts` and `STYLES.md` say what
- * each one is for. A style sets the tokens below; the kit's primitives (button, input, card,
- * badge, table, label, select, textarea) read them, and a few components also change their
- * markup (they read the style from context).
+ * `<KitStyle>` / `<KitProvider look={…}>` put them there (before the first paint, from the
+ * server's HTML); `src/lib/kitStyle.ts` and `STYLES.md` say what each one is for.
  *
- * Every rule here is a plain attribute selector, one class deep — the same weight as `:root` —
- * so an app's own `:root { --primary: …; --radius: …; --kit-font-sans: … }` after the import still
- * wins, exactly as before styles existed.
+ * **The app's colours and design always win.** A style sets only shape, type and density — never a
+ * colour; what looks like colour in a style (Bold's ink, Compact's shaded table header) is the
+ * app's own `--foreground` or `--muted`. Every rule here is weightless (`:where()`) and sits on
+ * <html> alone, so an app's `:root { … }` / `.dark { … }` — colours, `--radius`,
+ * `--kit-font-sans`, any `--kit-*` token — overrides it, and a subtree that redefines them (a
+ * public site's `.site`) keeps its own.
+ *
+ * **Tokens.** A style sets `--kit-*` variables; the kit's primitives read each one with the class
+ * it replaced as the fallback (`h-(--kit-control-h,2.25rem)`), at the element itself. With no
+ * style, none is set and every component is exactly what it was before styles existed.
+ *
+ *   Fonts     --kit-font-sans / -head / -body / -mono (app-facing, as before) --kit-label-font
+ *   Headings  --kit-heading-weight --kit-h1-size --kit-h1-tracking --kit-h2-size --kit-h3-size
+ *             --kit-heading-tracking
+ *   Labels    --kit-label-size --kit-label-weight --kit-label-transform --kit-label-tracking
+ *             --kit-field-label-transform
+ *   Controls  --kit-control-h --kit-control-h-sm --kit-control-h-lg --kit-control-px --kit-input-px
+ *             --kit-control-radius --kit-control-border --kit-control-shadow
+ *             --kit-control-shadow-active --kit-input-shadow --kit-press --kit-frame
+ *   Buttons   --kit-button-radius --kit-button-font --kit-button-text --kit-button-weight
+ *             --kit-button-transform --kit-button-tracking --kit-button-border
+ *             --kit-button-hover-scale
+ *   Badges    --kit-badge-radius --kit-badge-font --kit-badge-weight --kit-badge-transform
+ *             --kit-badge-tracking --kit-badge-border
+ *   Cards     --kit-card-radius --kit-card-pad --kit-card-gap --kit-card-border --kit-card-shadow
+ *             --kit-card-title-font
+ *   Tables    --kit-table-text --kit-table-head-h --kit-table-head-bg --kit-table-head-color
+ *             --kit-table-head-font --kit-table-head-size --kit-table-head-weight
+ *             --kit-table-head-transform --kit-table-head-tracking --kit-cell-px --kit-cell-py
+ *             --kit-table-stripe
  */
-
-/*
- * --- Tokens, with the default style's values ---
- * These reproduce the kit's look before styles existed, class for class. `:where()` keeps them
- * weightless, so a style block overrides them, and so does an app's own `:root { … }`.
- */
-:where(:root) {
-	/* Headings */
-	--kit-heading-weight: 600;
-	--kit-h1-size: 1.75rem;
-	--kit-h1-tracking: -0.01em;
-	--kit-h2-size: 1.375rem;
-	--kit-h3-size: 1.125rem;
-	--kit-heading-tracking: normal;
-
-	/* Form labels */
-	--kit-label-size: 0.875rem;
-	--kit-label-weight: 500;
-	--kit-label-transform: none;
-	--kit-label-tracking: normal;
-	/* InputComp's labels: capitalised, as they always were, unless the style sets labels in caps. */
-	--kit-field-label-transform: capitalize;
-
-	/* Buttons, inputs, selects */
-	--kit-control-h: 2.25rem;
-	--kit-control-h-sm: 2rem;
-	--kit-control-h-lg: 2.5rem;
-	--kit-control-px: 1rem;
-	--kit-input-px: 0.75rem;
-	--kit-control-border: 1px;
-	--kit-control-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--kit-button-text: 0.875rem;
-	--kit-button-weight: 500;
-	--kit-button-transform: none;
-	--kit-button-tracking: normal;
-	--kit-button-border: 0px;
-	--kit-button-hover-scale: 1.05;
-	/* Pressed: how far a button moves, and its shadow while held. */
-	--kit-press: 0px;
-
-	/* Badges */
-	--kit-badge-weight: 500;
-	--kit-badge-transform: none;
-	--kit-badge-tracking: normal;
-	--kit-badge-border: 1px;
-
-	/* Cards */
-	--kit-card-pad: 1.5rem;
-	--kit-card-gap: 1.5rem;
-	--kit-card-border: 1px;
-	--kit-card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-
-	/* Tables */
-	--kit-table-text: 0.875rem;
-	--kit-table-head-h: 2.5rem;
-	--kit-table-head-bg: transparent;
-	--kit-table-head-size: 0.875rem;
-	--kit-table-head-weight: 500;
-	--kit-table-head-transform: none;
-	--kit-table-head-tracking: normal;
-	--kit-cell-px: 0.5rem;
-	--kit-cell-py: 0.5rem;
-	--kit-table-stripe: transparent;
-}
-
-/*
- * The tokens that read other variables (`calc(var(--radius) - 2px)`, a face from
- * `--kit-font-sans`). A custom property like that is worked out on the element that declares it,
- * and its result is inherited, so these are declared again on every element that carries a look:
- * a preview, or a dialog portalled out of the page, works them out from its own style's values.
- */
-:where(:root, [data-kit-style]) {
-	/* Fonts. `--kit-font-sans` / `-head` / `-body` are the app-facing names (see theme.base.css). */
-	--kit-sans: var(--kit-font-sans, 'Inter', ui-sans-serif, system-ui, sans-serif);
-	--kit-head: var(--kit-font-head, var(--kit-sans));
-	--kit-body: var(--kit-font-body, var(--kit-sans));
-	--kit-mono: var(
-		--kit-font-mono,
-		ui-monospace,
-		SFMono-Regular,
-		Menlo,
-		Monaco,
-		Consolas,
-		'Liberation Mono',
-		'Courier New',
-		monospace
-	);
-	/* Small labels: form labels, table headers, eyebrows, stat names. */
-	--kit-label-font: var(--kit-sans);
-
-	/* Shapes and faces that follow the radius and fonts. */
-	--kit-control-radius: calc(var(--radius) - 2px);
-	--kit-input-shadow: var(--kit-control-shadow);
-	--kit-button-radius: var(--kit-control-radius);
-	--kit-button-font: var(--kit-sans);
-	--kit-control-shadow-active: var(--kit-control-shadow);
-	--kit-badge-radius: calc(var(--radius) - 2px);
-	--kit-badge-font: var(--kit-sans);
-	--kit-card-radius: calc(var(--radius) + 4px);
-	--kit-card-title-font: var(--kit-sans);
-	--kit-table-head-color: var(--foreground);
-	--kit-table-head-font: var(--kit-sans);
-}
-
-/* A styled subtree takes its own body face (the page's <body> does this for <html>). */
-[data-kit-style] {
-	font-family: var(--kit-sans);
-}
 
 /*
  * --- Compact ---
  * Dense: 32px controls, tight striped rows, 14px text, tabular figures. IBM Plex Sans.
  */
-[data-kit-style='compact'] {
+:where(:root[data-kit-style='compact']) {
 	--radius: 0.375rem;
 	--kit-font-sans: 'IBM Plex Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 
@@ -160,17 +77,19 @@
 	--kit-table-head-weight: 600;
 	--kit-cell-py: 0.3125rem;
 	--kit-table-stripe: color-mix(in oklch, var(--muted) 55%, transparent);
+}
 
+/* Smaller running text and figures that line up — on <body>, so `rem` stays the browser's. */
+:where(:root[data-kit-style='compact'] body) {
 	font-size: 0.875rem;
 	font-variant-numeric: tabular-nums;
 }
 
 /*
  * --- Soft ---
- * Roomy: 40px pills, round borderless cards on soft shadows, a faintly tinted page.
- * Plus Jakarta Sans.
+ * Roomy: 40px pills, round borderless cards on soft shadows. Plus Jakarta Sans.
  */
-[data-kit-style='soft'] {
+:where(:root[data-kit-style='soft']) {
 	--radius: 0.875rem;
 	--kit-font-sans: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 
@@ -196,45 +115,24 @@
 	--kit-card-radius: 1.375rem;
 	--kit-card-pad: 1.75rem;
 	--kit-card-border: 0px;
-	--kit-card-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 8px 24px -8px rgb(15 23 42 / 0.1);
+	--kit-card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 8px 24px -8px rgb(0 0 0 / 0.14);
 
 	--kit-table-head-h: 2.75rem;
 	--kit-table-head-bg: var(--muted);
 	--kit-table-head-color: var(--muted-foreground);
 	--kit-cell-px: 0.75rem;
 	--kit-cell-py: 0.75rem;
-
-	--background: oklch(0.975 0.006 255);
-	--muted: oklch(0.955 0.008 255);
-	--secondary: oklch(0.95 0.01 255);
-	--accent: oklch(0.945 0.012 255);
-	--border: oklch(0.92 0.006 255);
-	--sidebar: oklch(0.975 0.006 255);
-}
-
-.dark[data-kit-style='soft'],
-.dark [data-kit-style='soft'] {
-	--kit-card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.5);
-	--background: oklch(0.16 0.01 260);
-	--card: oklch(0.21 0.012 260);
-	--popover: oklch(0.21 0.012 260);
-	--muted: oklch(0.26 0.012 260);
-	--secondary: oklch(0.27 0.012 260);
-	--accent: oklch(0.28 0.014 260);
-	--border: oklch(1 0 0 / 0.07);
-	--sidebar: oklch(0.18 0.01 260);
 }
 
 /*
  * --- Sharp ---
- * Square: no radius, no shadows, hairlines, uppercase monospaced labels and buttons, pure greys.
- * Geist with Geist Mono.
+ * Square: no radius, no shadows, uppercase monospaced labels and buttons. Geist with Geist Mono.
  */
-[data-kit-style='sharp'] {
+:where(:root[data-kit-style='sharp']) {
 	--radius: 0rem;
 	--kit-font-sans: 'Geist', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 	--kit-font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-	--kit-label-font: var(--kit-mono);
+	--kit-label-font: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	--kit-h1-tracking: -0.025em;
 	--kit-heading-tracking: -0.015em;
@@ -246,14 +144,14 @@
 
 	--kit-control-radius: 0px;
 	--kit-control-shadow: none;
-	--kit-button-font: var(--kit-mono);
+	--kit-button-font: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 	--kit-button-text: 0.75rem;
 	--kit-button-transform: uppercase;
 	--kit-button-tracking: 0.06em;
 	--kit-button-hover-scale: 1;
 
 	--kit-badge-radius: 0px;
-	--kit-badge-font: var(--kit-mono);
+	--kit-badge-font: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 	--kit-badge-transform: uppercase;
 	--kit-badge-tracking: 0.06em;
 
@@ -261,53 +159,23 @@
 	--kit-card-pad: 1.25rem;
 	--kit-card-gap: 1.25rem;
 	--kit-card-shadow: none;
-	--kit-card-title-font: var(--kit-mono);
+	--kit-card-title-font: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
 	--kit-table-head-bg: var(--muted);
 	--kit-table-head-color: var(--muted-foreground);
-	--kit-table-head-font: var(--kit-mono);
+	--kit-table-head-font: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 	--kit-table-head-size: 0.6875rem;
 	--kit-table-head-transform: uppercase;
 	--kit-table-head-tracking: 0.08em;
 	--kit-cell-px: 0.75rem;
-
-	--background: oklch(0.99 0 0);
-	--foreground: oklch(0.15 0 0);
-	--card-foreground: oklch(0.15 0 0);
-	--popover-foreground: oklch(0.15 0 0);
-	--secondary: oklch(0.96 0 0);
-	--muted: oklch(0.96 0 0);
-	--muted-foreground: oklch(0.48 0 0);
-	--accent: oklch(0.95 0 0);
-	--border: oklch(0.88 0 0);
-	--input: oklch(0.85 0 0);
-	--sidebar-border: oklch(0.88 0 0);
-}
-
-.dark[data-kit-style='sharp'],
-.dark [data-kit-style='sharp'] {
-	--background: oklch(0.13 0 0);
-	--foreground: oklch(0.96 0 0);
-	--card: oklch(0.16 0 0);
-	--card-foreground: oklch(0.96 0 0);
-	--popover: oklch(0.16 0 0);
-	--popover-foreground: oklch(0.96 0 0);
-	--secondary: oklch(0.22 0 0);
-	--muted: oklch(0.21 0 0);
-	--muted-foreground: oklch(0.68 0 0);
-	--accent: oklch(0.24 0 0);
-	--border: oklch(1 0 0 / 0.13);
-	--input: oklch(1 0 0 / 0.18);
-	--sidebar: oklch(0.15 0 0);
-	--sidebar-border: oklch(1 0 0 / 0.13);
 }
 
 /*
  * --- Formal ---
- * A document: serif headings, warm paper, ruled tables, small-capital labels, flat controls.
+ * A document: serif headings, ruled tables, small-capital labels, flat controls.
  * Source Serif 4 with Source Sans 3.
  */
-[data-kit-style='formal'] {
+:where(:root[data-kit-style='formal']) {
 	--radius: 0.25rem;
 	--kit-font-sans: 'Source Sans 3', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 	--kit-font-head: 'Source Serif 4', 'Noto Serif Ethiopic', ui-serif, Georgia, serif;
@@ -331,7 +199,7 @@
 	--kit-card-radius: var(--radius);
 	--kit-card-pad: 1.75rem;
 	--kit-card-shadow: none;
-	--kit-card-title-font: var(--kit-head);
+	--kit-card-title-font: 'Source Serif 4', 'Noto Serif Ethiopic', ui-serif, Georgia, serif;
 
 	--kit-table-head-size: 0.6875rem;
 	--kit-table-head-weight: 600;
@@ -340,58 +208,17 @@
 	--kit-table-head-color: var(--muted-foreground);
 	--kit-cell-px: 0.75rem;
 	--kit-cell-py: 0.625rem;
-
-	--background: oklch(0.982 0.006 85);
-	--foreground: oklch(0.22 0.015 60);
-	--card: oklch(0.995 0.003 85);
-	--card-foreground: oklch(0.22 0.015 60);
-	--popover: oklch(0.995 0.003 85);
-	--popover-foreground: oklch(0.22 0.015 60);
-	--secondary: oklch(0.955 0.008 85);
-	--secondary-foreground: oklch(0.25 0.015 60);
-	--muted: oklch(0.955 0.008 85);
-	--muted-foreground: oklch(0.48 0.015 60);
-	--accent: oklch(0.945 0.01 85);
-	--accent-foreground: oklch(0.25 0.015 60);
-	--border: oklch(0.87 0.012 80);
-	--input: oklch(0.85 0.012 80);
-	--sidebar: oklch(0.975 0.007 85);
-	--sidebar-foreground: oklch(0.25 0.015 60);
-	--sidebar-accent: oklch(0.94 0.01 85);
-	--sidebar-border: oklch(0.87 0.012 80);
-}
-
-.dark[data-kit-style='formal'],
-.dark [data-kit-style='formal'] {
-	--background: oklch(0.18 0.008 70);
-	--foreground: oklch(0.93 0.01 85);
-	--card: oklch(0.215 0.009 70);
-	--card-foreground: oklch(0.93 0.01 85);
-	--popover: oklch(0.215 0.009 70);
-	--popover-foreground: oklch(0.93 0.01 85);
-	--secondary: oklch(0.27 0.009 70);
-	--secondary-foreground: oklch(0.93 0.01 85);
-	--muted: oklch(0.26 0.009 70);
-	--muted-foreground: oklch(0.7 0.012 80);
-	--accent: oklch(0.28 0.01 70);
-	--accent-foreground: oklch(0.93 0.01 85);
-	--border: oklch(0.93 0.02 85 / 0.12);
-	--input: oklch(0.93 0.02 85 / 0.17);
-	--sidebar: oklch(0.2 0.008 70);
-	--sidebar-foreground: oklch(0.9 0.01 85);
-	--sidebar-accent: oklch(0.28 0.01 70);
-	--sidebar-border: oklch(0.93 0.02 85 / 0.12);
 }
 
 /*
  * --- Bold ---
- * Ink: 2px dark borders, hard offset shadows, buttons that press in, heavy headings.
- * Space Grotesk.
+ * Ink: 2px borders and hard offset shadows in the app's own foreground colour, buttons that press
+ * in, heavy headings, an inverted table header. Space Grotesk.
  */
-[data-kit-style='bold'] {
+:where(:root[data-kit-style='bold']) {
 	--radius: 0.5rem;
 	--kit-font-sans: 'Space Grotesk', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
-	--kit-ink: var(--foreground);
+	--kit-frame: var(--foreground);
 
 	--kit-heading-weight: 700;
 	--kit-h1-size: 2.25rem;
@@ -406,9 +233,9 @@
 	--kit-control-h-lg: 2.875rem;
 	--kit-control-px: 1.25rem;
 	--kit-control-border: 2px;
-	--kit-control-shadow: 3px 3px 0 0 var(--kit-ink);
+	--kit-control-shadow: 3px 3px 0 0 var(--foreground);
 	--kit-input-shadow: none;
-	--kit-control-shadow-active: 0 0 0 0 var(--kit-ink);
+	--kit-control-shadow-active: 0 0 0 0 var(--foreground);
 	--kit-press: 3px;
 	--kit-button-weight: 700;
 	--kit-button-border: 2px;
@@ -418,7 +245,7 @@
 	--kit-badge-border: 2px;
 
 	--kit-card-border: 2px;
-	--kit-card-shadow: 5px 5px 0 0 var(--kit-ink);
+	--kit-card-shadow: 5px 5px 0 0 var(--foreground);
 
 	--kit-table-head-bg: var(--foreground);
 	--kit-table-head-color: var(--background);
@@ -428,41 +255,14 @@
 	--kit-table-head-tracking: 0.04em;
 	--kit-cell-px: 0.75rem;
 	--kit-cell-py: 0.625rem;
-
-	--background: oklch(0.975 0.012 95);
-	--foreground: oklch(0.18 0.01 255);
-	--card-foreground: oklch(0.18 0.01 255);
-	--popover-foreground: oklch(0.18 0.01 255);
-	--muted: oklch(0.94 0.015 95);
-	--secondary: oklch(0.93 0.02 95);
-	--accent: oklch(0.93 0.03 95);
-	--border: oklch(0.18 0.01 255);
-	--input: oklch(0.18 0.01 255);
-	--sidebar-border: oklch(0.18 0.01 255);
-}
-
-.dark[data-kit-style='bold'],
-.dark [data-kit-style='bold'] {
-	--background: oklch(0.15 0.008 255);
-	--foreground: oklch(0.96 0.01 95);
-	--card: oklch(0.2 0.01 255);
-	--card-foreground: oklch(0.96 0.01 95);
-	--popover: oklch(0.2 0.01 255);
-	--popover-foreground: oklch(0.96 0.01 95);
-	--muted: oklch(0.25 0.01 255);
-	--secondary: oklch(0.27 0.01 255);
-	--accent: oklch(0.28 0.012 255);
-	--border: oklch(0.85 0.01 95 / 0.85);
-	--input: oklch(0.85 0.01 95 / 0.85);
-	--sidebar-border: oklch(0.85 0.01 95 / 0.85);
 }
 
 /*
  * --- Accents ---
- * The action colour (buttons, focus, the active menu item, the first chart series), in light and
- * dark. `blue` is the kit's own; leaving the accent out keeps whatever the app or style set.
+ * A stand-in action colour for an app with no palette of its own — weightless and after the kit's
+ * defaults, so it replaces the kit's blue but never an app's `--primary`. `blue` is the kit's.
  */
-[data-kit-accent='blue'] {
+:where(:root[data-kit-accent='blue']) {
 	--primary: oklch(0.48 0.14 258);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.48 0.14 258 / 0.5);
@@ -471,8 +271,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.48 0.14 258 / 0.5);
 }
-.dark[data-kit-accent='blue'],
-.dark [data-kit-accent='blue'] {
+:where(:root.dark[data-kit-accent='blue']) {
 	--primary: oklch(0.65 0.13 258);
 	--primary-foreground: oklch(0.15 0.01 255);
 	--ring: oklch(0.65 0.13 258 / 0.5);
@@ -482,7 +281,7 @@
 	--sidebar-ring: oklch(0.65 0.13 258 / 0.5);
 }
 
-[data-kit-accent='teal'] {
+:where(:root[data-kit-accent='teal']) {
 	--primary: oklch(0.52 0.1 190);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.52 0.1 190 / 0.5);
@@ -491,8 +290,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.52 0.1 190 / 0.5);
 }
-.dark[data-kit-accent='teal'],
-.dark [data-kit-accent='teal'] {
+:where(:root.dark[data-kit-accent='teal']) {
 	--primary: oklch(0.72 0.11 190);
 	--primary-foreground: oklch(0.16 0.02 200);
 	--ring: oklch(0.72 0.11 190 / 0.5);
@@ -502,7 +300,7 @@
 	--sidebar-ring: oklch(0.72 0.11 190 / 0.5);
 }
 
-[data-kit-accent='green'] {
+:where(:root[data-kit-accent='green']) {
 	--primary: oklch(0.5 0.13 150);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.5 0.13 150 / 0.5);
@@ -511,8 +309,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.5 0.13 150 / 0.5);
 }
-.dark[data-kit-accent='green'],
-.dark [data-kit-accent='green'] {
+:where(:root.dark[data-kit-accent='green']) {
 	--primary: oklch(0.72 0.15 150);
 	--primary-foreground: oklch(0.16 0.03 150);
 	--ring: oklch(0.72 0.15 150 / 0.5);
@@ -522,7 +319,7 @@
 	--sidebar-ring: oklch(0.72 0.15 150 / 0.5);
 }
 
-[data-kit-accent='violet'] {
+:where(:root[data-kit-accent='violet']) {
 	--primary: oklch(0.5 0.18 295);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.5 0.18 295 / 0.5);
@@ -531,8 +328,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.5 0.18 295 / 0.5);
 }
-.dark[data-kit-accent='violet'],
-.dark [data-kit-accent='violet'] {
+:where(:root.dark[data-kit-accent='violet']) {
 	--primary: oklch(0.7 0.15 295);
 	--primary-foreground: oklch(0.16 0.03 295);
 	--ring: oklch(0.7 0.15 295 / 0.5);
@@ -542,7 +338,7 @@
 	--sidebar-ring: oklch(0.7 0.15 295 / 0.5);
 }
 
-[data-kit-accent='amber'] {
+:where(:root[data-kit-accent='amber']) {
 	--primary: oklch(0.62 0.15 60);
 	--primary-foreground: oklch(0.18 0.03 60);
 	--ring: oklch(0.62 0.15 60 / 0.5);
@@ -551,8 +347,7 @@
 	--sidebar-primary-foreground: oklch(0.18 0.03 60);
 	--sidebar-ring: oklch(0.62 0.15 60 / 0.5);
 }
-.dark[data-kit-accent='amber'],
-.dark [data-kit-accent='amber'] {
+:where(:root.dark[data-kit-accent='amber']) {
 	--primary: oklch(0.78 0.15 70);
 	--primary-foreground: oklch(0.18 0.03 60);
 	--ring: oklch(0.78 0.15 70 / 0.5);
@@ -562,7 +357,7 @@
 	--sidebar-ring: oklch(0.78 0.15 70 / 0.5);
 }
 
-[data-kit-accent='rose'] {
+:where(:root[data-kit-accent='rose']) {
 	--primary: oklch(0.55 0.19 15);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.55 0.19 15 / 0.5);
@@ -571,8 +366,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.55 0.19 15 / 0.5);
 }
-.dark[data-kit-accent='rose'],
-.dark [data-kit-accent='rose'] {
+:where(:root.dark[data-kit-accent='rose']) {
 	--primary: oklch(0.7 0.17 15);
 	--primary-foreground: oklch(0.16 0.03 15);
 	--ring: oklch(0.7 0.17 15 / 0.5);
@@ -582,7 +376,7 @@
 	--sidebar-ring: oklch(0.7 0.17 15 / 0.5);
 }
 
-[data-kit-accent='neutral'] {
+:where(:root[data-kit-accent='neutral']) {
 	--primary: oklch(0.25 0.01 255);
 	--primary-foreground: oklch(0.99 0 0);
 	--ring: oklch(0.45 0.01 255 / 0.5);
@@ -591,8 +385,7 @@
 	--sidebar-primary-foreground: oklch(0.99 0 0);
 	--sidebar-ring: oklch(0.45 0.01 255 / 0.5);
 }
-.dark[data-kit-accent='neutral'],
-.dark [data-kit-accent='neutral'] {
+:where(:root.dark[data-kit-accent='neutral']) {
 	--primary: oklch(0.93 0.005 255);
 	--primary-foreground: oklch(0.18 0.01 255);
 	--ring: oklch(0.7 0.01 255 / 0.5);
@@ -604,77 +397,75 @@
 
 /*
  * --- Radius ---
- * Scales every corner the style draws from `--radius`. Shapes a style fixes on purpose — Soft's
- * pill buttons, Sharp's square controls — stay as they are: the style decides the shape, the
- * radius tunes the rest.
+ * Scales every corner drawn from `--radius`. Shapes a style fixes on purpose — Soft's pill
+ * buttons, Sharp's square controls — stay: the style decides the shape, the radius tunes the rest.
  */
-[data-kit-radius='none'] {
+:where(:root[data-kit-radius='none']) {
 	--radius: 0rem;
 }
-[data-kit-radius='sm'] {
+:where(:root[data-kit-radius='sm']) {
 	--radius: 0.25rem;
 }
-[data-kit-radius='md'] {
+:where(:root[data-kit-radius='md']) {
 	--radius: 0.5rem;
 }
-[data-kit-radius='lg'] {
+:where(:root[data-kit-radius='lg']) {
 	--radius: 0.75rem;
 }
-[data-kit-radius='xl'] {
+:where(:root[data-kit-radius='xl']) {
 	--radius: 1rem;
 }
 
 /*
  * --- Fonts ---
- * `data-kit-font` replaces the style's body face; `data-kit-heading` its heading face.
- * The faces load from `fonts.css` (theme.css); with theme.base.css the app loads its own.
+ * `data-kit-font` replaces the style's body face; `data-kit-heading` its heading face. The faces
+ * load from `fonts.css` (theme.css); with theme.base.css the app loads its own.
  */
-[data-kit-font='inter'] {
+:where(:root[data-kit-font='inter']) {
 	--kit-font-sans: 'Inter', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='plex'] {
+:where(:root[data-kit-font='plex']) {
 	--kit-font-sans: 'IBM Plex Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='jakarta'] {
+:where(:root[data-kit-font='jakarta']) {
 	--kit-font-sans: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='geist'] {
+:where(:root[data-kit-font='geist']) {
 	--kit-font-sans: 'Geist', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='source'] {
+:where(:root[data-kit-font='source']) {
 	--kit-font-sans: 'Source Sans 3', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='grotesk'] {
+:where(:root[data-kit-font='grotesk']) {
 	--kit-font-sans: 'Space Grotesk', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-font='serif'] {
+:where(:root[data-kit-font='serif']) {
 	--kit-font-sans: 'Source Serif 4', 'Noto Serif Ethiopic', ui-serif, Georgia, serif;
 }
-[data-kit-font='mono'] {
+:where(:root[data-kit-font='mono']) {
 	--kit-font-sans: 'Geist Mono', 'Noto Sans Ethiopic', ui-monospace, monospace;
 }
-
-[data-kit-heading='inter'] {
+:where(:root[data-kit-heading='inter']) {
 	--kit-font-head: 'Inter', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='plex'] {
+:where(:root[data-kit-heading='plex']) {
 	--kit-font-head: 'IBM Plex Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='jakarta'] {
+:where(:root[data-kit-heading='jakarta']) {
 	--kit-font-head: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='geist'] {
+:where(:root[data-kit-heading='geist']) {
 	--kit-font-head: 'Geist', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='source'] {
+:where(:root[data-kit-heading='source']) {
 	--kit-font-head: 'Source Sans 3', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='grotesk'] {
+:where(:root[data-kit-heading='grotesk']) {
 	--kit-font-head: 'Space Grotesk', 'Noto Sans Ethiopic', ui-sans-serif, system-ui, sans-serif;
 }
-[data-kit-heading='serif'] {
+:where(:root[data-kit-heading='serif']) {
 	--kit-font-head: 'Source Serif 4', 'Noto Serif Ethiopic', ui-serif, Georgia, serif;
 }
-[data-kit-heading='mono'] {
+:where(:root[data-kit-heading='mono']) {
 	--kit-font-head: 'Geist Mono', 'Noto Sans Ethiopic', ui-monospace, monospace;
 }

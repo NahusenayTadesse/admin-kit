@@ -14,7 +14,7 @@
 	bind:this={ref}
 	data-slot="card-header"
 	class={cn(
-		'@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-(--kit-card-pad) has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-(--kit-card-pad)',
+		'@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-(--kit-card-pad,1.5rem) has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-(--kit-card-pad,1.5rem)',
 		className
 	)}
 	{...restProps}

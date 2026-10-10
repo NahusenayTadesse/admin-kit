@@ -45,7 +45,7 @@
 	{data}
 	<span class="relative p-4">
 		{#if visible}
-			<Copyicon class="absolute top-2 right-0 h-4 w-4  text-black dark:text-white" />
+			<Copyicon class="absolute top-2 right-0 h-4 w-4  text-foreground" />
 		{/if}
 	</span>
 </button>

@@ -163,15 +163,13 @@
 		</dl>
 	{:else}
 		<table id="table" class="w-full table-fixed text-left lg:w-full">
-			<thead
-				class="bg-gray-100 font-semibold tracking-wider text-gray-700 uppercase dark:bg-gray-700 dark:text-gray-300"
-			>
+			<thead class="bg-muted font-semibold tracking-wider text-muted-foreground uppercase">
 				<tr>
 					<th class="px-4 py-3">{L.detail}</th>
 					<th class="px-4 py-3">{L.value}</th>
 				</tr>
 			</thead>
-			<tbody class="text-gray-900 dark:text-gray-100">
+			<tbody class="text-foreground">
 				{#each singleTable as value, i (i)}
 					<tr>
 						<td class="px-4 py-3 font-semibold">{value.name}</td>

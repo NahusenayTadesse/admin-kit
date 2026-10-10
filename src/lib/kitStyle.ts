@@ -11,10 +11,11 @@ import { getContext, setContext } from 'svelte';
  * (corner rounding), `font` (body face) and `heading` (heading face). The style picks the shape
  * of things; the axes tune it.
  *
- * Everything is driven by `data-kit-*` attributes and CSS variables (`styles/kit-styles.css`),
- * so it works with SSR, needs no rebuild, and an app's own `--primary`, `--radius` or
- * `--kit-font-sans` still win over a style's. Components that change *markup* read the style
- * from context (`useKitLook`), which `<KitStyle>` or `<KitProvider look={…}>` sets.
+ * Everything is driven by `data-kit-*` attributes on `<html>` and CSS variables
+ * (`styles/kit-styles.css`), so it works with SSR and needs no rebuild. **The app's colours and
+ * design always win:** a style never sets a colour, and an app's own `--primary`, `--radius`,
+ * `--kit-font-sans` or any `--kit-*` token overrides the style's. Components that change *markup*
+ * read the style from context (`useKitLook`), which `<KitStyle>` or `<KitProvider look={…}>` sets.
  */
 
 export const KIT_STYLE_NAMES = ['default', 'compact', 'soft', 'sharp', 'formal', 'bold'] as const;
@@ -76,7 +77,7 @@ export const KIT_STYLES: Record<KitStyleName, KitStyleInfo> = {
 	default: {
 		name: 'default',
 		label: 'Default',
-		tagline: 'The kit as it has always looked: neutral greys, one blue, Inter.',
+		tagline: 'The kit as it has always looked: Inter, rounded rectangles, regular density.',
 		fonts: 'Inter / Inter',
 		radius: '0.5rem',
 		buttons: 'Rounded rectangles that grow slightly on hover',
@@ -139,7 +140,7 @@ export const KIT_STYLES: Record<KitStyleName, KitStyleInfo> = {
 	formal: {
 		name: 'formal',
 		label: 'Formal',
-		tagline: 'Serif headings, warm paper tones, ruled records, quiet controls.',
+		tagline: 'Serif headings, ruled records, small-capital labels, quiet controls.',
 		fonts: 'Source Serif 4 / Source Sans 3',
 		radius: '0.25rem',
 		buttons: 'Flat rectangles with barely-rounded corners',
@@ -155,7 +156,7 @@ export const KIT_STYLES: Record<KitStyleName, KitStyleInfo> = {
 	bold: {
 		name: 'bold',
 		label: 'Bold',
-		tagline: 'Thick ink borders, hard offset shadows, buttons that press in.',
+		tagline: 'Thick borders and hard offset shadows in the app’s ink, buttons that press in.',
 		fonts: 'Space Grotesk / Space Grotesk',
 		radius: '0.5rem',
 		buttons: 'Bordered blocks with an offset shadow that press down when clicked',
@@ -199,24 +200,39 @@ export const KIT_FONTS: Record<KitFont, { label: string; family: string }> = {
 };
 
 export function isKitStyle(value: unknown): value is KitStyleName {
-	return typeof value === 'string' && (KIT_STYLE_NAMES as readonly string[]).includes(value);
+	return known(KIT_STYLE_NAMES, value);
+}
+
+/** Every attribute a look can put on `<html>`. */
+export const KIT_LOOK_ATTRIBUTES = [
+	'data-kit-style',
+	'data-kit-accent',
+	'data-kit-radius',
+	'data-kit-font',
+	'data-kit-heading'
+] as const;
+
+function known<T extends string>(list: readonly T[], value: unknown): value is T {
+	return typeof value === 'string' && (list as readonly string[]).includes(value);
 }
 
 /**
- * The `data-kit-*` attributes for a look, to spread on an element: `<div {...kitLookAttributes(look)}>`.
- * `data-kit-style` is always present (`default` when none is given), so the CSS can recompute
- * its derived values on that element; the axes are present only when set.
+ * The `data-kit-*` attributes for a look, for `<html>`. `data-kit-style` is always present
+ * (`default` when none is given); the axes only when set. A value outside its list is dropped, so
+ * whatever reaches the page is one of the names the CSS knows.
  */
 export function kitLookAttributes(look: KitLook = {}): Record<string, string> {
-	const attributes: Record<string, string> = { 'data-kit-style': look.style ?? 'default' };
-	if (look.accent) attributes['data-kit-accent'] = look.accent;
-	if (look.radius) attributes['data-kit-radius'] = look.radius;
-	if (look.font) attributes['data-kit-font'] = look.font;
-	if (look.heading) attributes['data-kit-heading'] = look.heading;
+	const attributes: Record<string, string> = {
+		'data-kit-style': known(KIT_STYLE_NAMES, look.style) ? look.style : 'default'
+	};
+	if (known(KIT_ACCENT_NAMES, look.accent)) attributes['data-kit-accent'] = look.accent;
+	if (known(KIT_RADIUS_NAMES, look.radius)) attributes['data-kit-radius'] = look.radius;
+	if (known(KIT_FONT_NAMES, look.font)) attributes['data-kit-font'] = look.font;
+	if (known(KIT_FONT_NAMES, look.heading)) attributes['data-kit-heading'] = look.heading;
 	return attributes;
 }
 
-/** The look as `data-kit-*="…"` for an `<html>` tag (`app.html`), so the first paint matches. */
+/** The look as `data-kit-*="…"`, for an `<html>` tag written by hand (`app.html`). */
 export function kitLookHtml(look: KitLook = {}): string {
 	return Object.entries(kitLookAttributes(look))
 		.map(([name, value]) => `${name}="${value}"`)
@@ -239,5 +255,10 @@ export function setKitLook(look: KitLookContext) {
 
 /** The look in effect: the nearest `<KitStyle>`'s, or `default` outside one. */
 export function useKitLook(): KitLookContext {
-	return getContext<KitLookContext | undefined>(KEY) ?? { style: 'default' };
+	return outerKitLook() ?? { style: 'default' };
+}
+
+/** The nearest `<KitStyle>`'s look, or `undefined` when there is none. */
+export function outerKitLook(): KitLookContext | undefined {
+	return getContext<KitLookContext | undefined>(KEY);
 }

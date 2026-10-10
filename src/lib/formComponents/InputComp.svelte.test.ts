@@ -176,6 +176,6 @@ describe('InputComp.svelte', () => {
 
 		const screen = render(InputComp, { label: 'Name', form, errors, type: 'text', name: 'name' });
 
-		expect(screen.container.querySelector('.text-red-500')).toBeNull();
+		expect(screen.container.querySelector('.text-destructive')).toBeNull();
 	});
 });

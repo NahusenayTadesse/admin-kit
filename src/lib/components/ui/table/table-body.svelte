@@ -14,7 +14,7 @@
 	bind:this={ref}
 	data-slot="table-body"
 	class={cn(
-		'[&_tr:last-child]:border-0 [&>tr:nth-child(even)>td]:bg-(--kit-table-stripe)',
+		'[&_tr:last-child]:border-0 [&>tr:nth-child(even)>td]:bg-(--kit-table-stripe,transparent)',
 		className
 	)}
 	{...restProps}

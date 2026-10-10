@@ -19,7 +19,6 @@
 		KIT_RADIUS_NAMES,
 		KIT_STYLES,
 		KIT_STYLE_NAMES,
-		kitLookHtml,
 		type KitAccent,
 		type KitFont,
 		type KitLook,
@@ -27,6 +26,7 @@
 		type KitStyleName
 	} from '$lib/kitStyle';
 	import Preview from './Preview.svelte';
+	import { APP_PALETTES, type AppPalette } from './palettes';
 
 	/*
 	 * The kit's answer to shadcn's /create: pick a style and tune it, see every kit component in it,
@@ -44,6 +44,10 @@
 	let radius = $state<KitRadius | undefined>(pick(KIT_RADIUS_NAMES, params.get('radius')));
 	let font = $state<KitFont | undefined>(pick(KIT_FONT_NAMES, params.get('font')));
 	let heading = $state<KitFont | undefined>(pick(KIT_FONT_NAMES, params.get('heading')));
+	/** Stands in for an app's own layout.css, loaded after the kit's theme. */
+	let palette = $state<AppPalette | undefined>(
+		pick(Object.keys(APP_PALETTES) as AppPalette[], params.get('palette'))
+	);
 
 	const look = $derived<KitLook>({ style, accent, radius, font, heading });
 
@@ -54,6 +58,8 @@
 			if (value && !(key === 'style' && value === 'default')) url.searchParams.set(key, value);
 			else url.searchParams.delete(key);
 		}
+		if (palette) url.searchParams.set('palette', palette);
+		else url.searchParams.delete('palette');
 		if (url.search !== page.url.search) replaceState(url, {});
 	});
 
@@ -68,7 +74,7 @@
 
 	function reset() {
 		style = 'default';
-		accent = radius = font = heading = undefined;
+		accent = radius = font = heading = palette = undefined;
 	}
 
 	/** The look as a props object, without the axes left to the style. */
@@ -87,14 +93,13 @@
 			.join('')
 	);
 
-	let tab = $state<'provider' | 'root' | 'html'>('provider');
+	let tab = $state<'provider' | 'root'>('provider');
 	const code = $derived(
 		{
 			provider: `<!-- src/routes/dashboard/+layout.svelte -->\n<KitProvider look={${lookLiteral}} {access} navigation={NAVIGATION} …>\n\t…\n</KitProvider>`,
 			root:
 				`<!-- src/routes/+layout.svelte: the whole app, sign-in included -->\n<script lang="ts">\n\timport KitStyle from '@nahu/admin-kit/components/KitStyle.svelte';\n\tlet { children } = $props();\n</` +
-				`script>\n\n<KitStyle${kitStyleProps}>\n\t{@render children()}\n</KitStyle>`,
-			html: `<!-- src/app.html: the same look on the very first paint of <body> -->\n<html lang="en" ${kitLookHtml(look)}>`
+				`script>\n\n<KitStyle${kitStyleProps}>\n\t{@render children()}\n</KitStyle>`
 		}[tab]
 	);
 
@@ -115,7 +120,13 @@
 	};
 </script>
 
-<svelte:head><title>Create · admin-kit</title></svelte:head>
+<svelte:head>
+	<title>Create · admin-kit</title>
+	{#if palette}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html `<style data-app-palette>${APP_PALETTES[palette].css}</style>`}
+	{/if}
+</svelte:head>
 
 <KitStyle {...look}>
 	<div class="min-h-screen bg-background text-foreground">
@@ -216,6 +227,20 @@
 					</p>
 				</fieldset>
 
+				<label class="flex flex-col gap-1.5">
+					<span class="panel-label">Test with an app's palette</span>
+					<select class="panel-select" bind:value={palette}>
+						<option value={undefined}>None — the kit's colours</option>
+						{#each Object.entries(APP_PALETTES) as [name, { label }] (name)}
+							<option value={name}>{label}</option>
+						{/each}
+					</select>
+					<span class="text-xs text-muted-foreground">
+						The app's colours always win: styles never set one, and the accent only fills in for an
+						app with no <code>--primary</code>.
+					</span>
+				</label>
+
 				<div class="grid grid-cols-2 gap-3">
 					<label class="flex flex-col gap-1.5">
 						<span class="panel-label">Body font</span>
@@ -252,9 +277,6 @@
 						>
 						<button type="button" data-checked={tab === 'root'} onclick={() => (tab = 'root')}
 							>Whole app</button
-						>
-						<button type="button" data-checked={tab === 'html'} onclick={() => (tab = 'html')}
-							>app.html</button
 						>
 					</div>
 					<pre

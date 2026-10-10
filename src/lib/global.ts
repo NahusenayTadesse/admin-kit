@@ -8,7 +8,7 @@ import { toGregorian } from 'ethiopian-calendar-new';
 
 /** The sidebar's surface. A flat colour: the blue-to-white gradient went with the rebrand. */
 export const appSurface = `bg-sidebar text-sidebar-foreground`;
-export const selectItem = `hover:bg-gray-100 hover:shadow-md hover:scale-101 duration-300 transition-all ease-in-out dark:hover:bg-gray-900`;
+export const selectItem = `hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-101 duration-300 transition-all ease-in-out`;
 
 /**
  * One option in a picker — a select, a combobox, a checkbox group.

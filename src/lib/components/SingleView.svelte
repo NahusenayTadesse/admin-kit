@@ -127,7 +127,7 @@
 {:else}
 	<div
 		class="flex w-full flex-col items-center justify-center rounded-md
- bg-white shadow-lg lg:w-md lg:min-w-3xl dark:bg-black dark:shadow-md dark:shadow-gray-900 {className}"
+ bg-card text-card-foreground shadow-lg lg:w-md lg:min-w-3xl dark:shadow-md {className}"
 	>
 		<div
 			class="flex w-full flex-col items-center justify-start rounded-t-lg border-b bg-muted px-8 py-6 text-foreground"

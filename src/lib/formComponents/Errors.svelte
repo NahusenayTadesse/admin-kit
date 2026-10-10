@@ -10,7 +10,7 @@
 	<div
 		role="alert"
 		aria-live="assertive"
-		class="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-red-800"
+		class="mb-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-destructive"
 	>
 		<div class="flex items-center justify-between">
 			<strong class="text-sm font-semibold">{L.fixTheFollowing}</strong>

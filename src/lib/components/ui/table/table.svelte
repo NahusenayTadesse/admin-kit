@@ -14,7 +14,10 @@
 	<table
 		bind:this={ref}
 		data-slot="table"
-		class={cn('w-full caption-bottom text-(length:--kit-table-text)', className)}
+		class={cn(
+			'w-full caption-bottom text-(length:--kit-table-text,0.875rem) leading-[calc(1.25/0.875)]',
+			className
+		)}
 		{...restProps}
 	>
 		{@render children?.()}

@@ -336,13 +336,13 @@
 	<DropdownMenu.Content align="end">
 		<DropdownMenu.Item class="capitalize">
 			<Button variant="default" class="w-full justify-start gap-2" onclick={printTable}>
-				<Printer class="size-4 text-white dark:text-black" />
+				<Printer class="size-4" />
 				{L.tablePrint}
 			</Button>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item class="capitalize">
 			<Button variant="default" class="w-full justify-start gap-2" onclick={exportTableToCSV}>
-				<Grid3x3 class="size-4 text-white dark:text-black" />
+				<Grid3x3 class="size-4" />
 				{L.tableExportCsv}
 			</Button>
 		</DropdownMenu.Item>

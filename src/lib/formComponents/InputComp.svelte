@@ -191,7 +191,9 @@
 </script>
 
 <div class="flex w-full max-w-full flex-col justify-start gap-2 p-1">
-	<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform)]">{label}</Label>
+	<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform,capitalize)]"
+		>{label}</Label
+	>
 
 	{#if type === 'textarea'}
 		<Textarea
@@ -238,7 +240,7 @@
 	{:else if type === 'checkboxSingle'}
 		<div class="flex items-center gap-2">
 			<Checkbox id={fieldId} bind:checked={$form[name]} {disabled} />
-			<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform)]"
+			<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform,capitalize)]"
 				>{placeholder}</Label
 			>
 			<input type="hidden" {name} bind:value={$form[name]} />
@@ -301,7 +303,7 @@
 		<!-- `role="alert"` so the message is announced when it appears, not only when focused. -->
 		<div id={errorId} role="alert" class="flex flex-col gap-1">
 			{#each messages as error (error)}
-				<p class="flex items-center gap-2 text-red-500">
+				<p class="flex items-center gap-2 text-destructive">
 					<CircleAlert class="size-4 shrink-0" />
 					{error}
 				</p>
