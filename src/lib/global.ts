@@ -22,6 +22,22 @@ export type Item = {
 	name: string;
 };
 
+/**
+ * A picker option that is shown as a card — a package, a plan, a room type — for `ImageSelect`.
+ *
+ * Everything past `Item` is optional, so a plain `Item[]` is one too and `InputComp` can take
+ * either. `image` is what `FileUpload` takes: a stored file's name, which goes through `fileUrl`,
+ * or a URL already (`/`, `http`, `data:`, `blob:`), which is used as it is.
+ */
+export type ImageItem = Item & {
+	image?: string | null;
+	/** A line under the name: what the package includes. */
+	description?: string;
+	/** Set beside the name, for a price or a duration. */
+	meta?: string;
+	disabled?: boolean;
+};
+
 export function isMobile() {
 	if (typeof window === 'undefined') return false; // SSR guard
 	return window.innerWidth <= 768;

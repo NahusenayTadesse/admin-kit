@@ -2,7 +2,7 @@
 	import { useLabels } from '$lib/labels';
 	import type { Writable } from 'svelte/store';
 	// The shared picker option, not a local copy of it.
-	import type { Item } from '$lib/global';
+	import type { ImageItem } from '$lib/global';
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	/**
@@ -35,6 +35,7 @@
 	import DateRangePicker from './DateRangePicker.svelte';
 	import ComboboxComp from './ComboboxComp.svelte';
 	import CheckboxComp from './CheckboxComp.svelte';
+	import ImageSelect from './ImageSelect.svelte';
 	import type { CalendarKind } from '$lib/calendars';
 
 	/**
@@ -83,6 +84,8 @@
 		| 'combo'
 		| 'checkbox'
 		| 'checkboxSingle'
+		| 'imageSelect'
+		| 'imageSelectMultiple'
 		| (string & {});
 
 	let {
@@ -125,7 +128,11 @@
 		step?: string | number;
 		placeholder?: string;
 		rows?: number;
-		items?: Item[];
+		/**
+		 * The options of a select, combobox or checklist. `imageSelect` takes `image`, `meta` and
+		 * `description` on each as well (see `ImageItem`); the others ignore them.
+		 */
+		items?: ImageItem[];
 		oldDays?: boolean;
 		year?: boolean;
 		futureDays?: boolean;
@@ -160,6 +167,8 @@
 	const fieldId = $derived(id ?? name);
 	const errorId = $derived(`${fieldId}-error`);
 	const describedById = $derived(`${fieldId}-description`);
+	/* A group of cards has no one control for `<label for>` to point at, so it names itself by id. */
+	const labelId = $derived(`${fieldId}-label`);
 
 	const fieldError = $derived($errors[name]);
 
@@ -191,8 +200,10 @@
 </script>
 
 <div class="flex w-full max-w-full flex-col justify-start gap-2 p-1">
-	<Label for={fieldId} class="[text-transform:var(--kit-field-label-transform,capitalize)]"
-		>{label}</Label
+	<Label
+		id={labelId}
+		for={fieldId}
+		class="[text-transform:var(--kit-field-label-transform,capitalize)]">{label}</Label
 	>
 
 	{#if type === 'textarea'}
@@ -237,6 +248,19 @@
 	{:else if type === 'checkbox'}
 		<CheckboxComp {items} bind:checkedValues={$form[name]} />
 		<input type="hidden" {name} bind:value={$form[name]} />
+	{:else if type === 'imageSelect' || type === 'imageSelectMultiple'}
+		<ImageSelect
+			{name}
+			bind:value={$form[name]}
+			{items}
+			multiple={type === 'imageSelectMultiple'}
+			{required}
+			{disabled}
+			id={fieldId}
+			labelledBy={labelId}
+			{invalid}
+			{describedBy}
+		/>
 	{:else if type === 'checkboxSingle'}
 		<div class="flex items-center gap-2">
 			<Checkbox id={fieldId} bind:checked={$form[name]} {disabled} />
