@@ -13,7 +13,10 @@ const PROJECTS = [
 	{ name: 'amoria', directory: '../amoria' },
 	{ name: 'stock management', directory: '../stock management' },
 	{ name: 'spotlessSystem', directory: '../spotlessSystem' },
-	{ name: 'joel-academy', directory: '../joel-academy' }
+	{ name: 'joel-academy', directory: '../joel-academy' },
+	{ name: 'hotel', directory: '../hotel' },
+	{ name: 'dentalPulse', directory: '../dentalPulse' },
+	{ name: 'steel-factory', directory: '../steel-factory' }
 ];
 
 const kit = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');

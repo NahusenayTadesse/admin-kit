@@ -29,6 +29,11 @@ npm run update:projects -- --list
 | `dentalClinic`     | `../dentalClinic`            | `../admin-kit`              |
 | `amoria`           | `../amoria`                  | `../admin-kit`              |
 | `stock management` | `../stock management`        | `../admin-kit`              |
+| `spotlessSystem`   | `../spotlessSystem`          | `../admin-kit`              |
+| `joel-academy`     | `../joel-academy`            | `../admin-kit`              |
+| `hotel`            | `../hotel`                   | `../admin-kit`              |
+| `dentalPulse`      | `../dentalPulse`             | `../admin-kit`              |
+| `steel-factory`    | `../steel-factory`           | `../admin-kit`              |
 
 Update only selected projects by supplying their names. Quote names containing spaces:
 
